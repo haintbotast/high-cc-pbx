@@ -1,0 +1,68 @@
+# =============================================================================
+# PostgreSQL Standby Configuration Template
+# Description: Copy to standby.signal + postgresql.auto.conf for standby node
+# =============================================================================
+
+# This file is a TEMPLATE for PostgreSQL 16 standby configuration
+#
+# To configure a standby:
+# 1. On standby node, create empty file: touch /var/lib/postgresql/16/main/standby.signal
+# 2. Add these settings to postgresql.auto.conf or postgresql.conf
+#
+# PostgreSQL 16 uses standby.signal file instead of recovery.conf
+
+# Primary connection string (update with actual primary IP)
+primary_conninfo = 'host=192.168.1.101 port=5432 user=replicator password=YOUR_REPLICATOR_PASSWORD application_name=node2'
+
+# Slot name on primary (must be created first)
+primary_slot_name = 'node2_slot'
+
+# Restore command from WAL archive
+restore_command = 'cp /var/lib/postgresql/16/wal_archive/%f %p'
+
+# Promote trigger file (optional - for manual promotion)
+promote_trigger_file = '/tmp/postgresql.trigger.5432'
+
+# Recovery target (optional - for point-in-time recovery)
+# recovery_target_time = '2025-01-15 12:00:00'
+# recovery_target_action = 'promote'
+
+# =============================================================================
+# SETUP INSTRUCTIONS
+# =============================================================================
+#
+# On PRIMARY (Node 1 - 192.168.1.101):
+# -----------------------------------------
+# 1. Create replication user:
+#    sudo -u postgres psql
+#    CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD 'YOUR_REPLICATOR_PASSWORD';
+#
+# 2. Create replication slot:
+#    SELECT pg_create_physical_replication_slot('node2_slot');
+#
+# 3. Create WAL archive directory:
+#    sudo mkdir -p /var/lib/postgresql/16/wal_archive
+#    sudo chown postgres:postgres /var/lib/postgresql/16/wal_archive
+#
+# 4. Ensure pg_hba.conf allows replication from standby
+#
+# On STANDBY (Node 2 - 192.168.1.102):
+# -----------------------------------------
+# 1. Stop PostgreSQL:
+#    sudo systemctl stop postgresql
+#
+# 2. Backup existing data:
+#    sudo mv /var/lib/postgresql/16/main /var/lib/postgresql/16/main.backup
+#
+# 3. Create base backup from primary:
+#    sudo -u postgres pg_basebackup -h 192.168.1.101 -U replicator \
+#      -D /var/lib/postgresql/16/main -P -Xs -R
+#    (The -R flag automatically creates standby.signal and sets primary_conninfo)
+#
+# 4. Start PostgreSQL:
+#    sudo systemctl start postgresql
+#
+# 5. Verify replication:
+#    On primary: SELECT * FROM pg_stat_replication;
+#    On standby: SELECT pg_is_in_recovery();  -- Should return 't'
+#

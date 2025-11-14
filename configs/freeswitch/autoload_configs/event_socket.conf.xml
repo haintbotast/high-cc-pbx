@@ -1,0 +1,19 @@
+<!-- =============================================================================
+     Event Socket Configuration
+     Description: ESL interface for voip-admin service
+     ============================================================================= -->
+
+<configuration name="event_socket.conf" description="Event Socket Configuration">
+  <settings>
+    <param name="nat-map" value="false"/>
+    <param name="listen-ip" value="127.0.0.1"/>
+    <param name="listen-port" value="8021"/>
+    <param name="password" value="ClueCon2025ChangeMe"/>
+
+    <!-- Apply inbound ACL -->
+    <!-- <param name="apply-inbound-acl" value="lan"/> -->
+
+    <!-- Stop on bind error -->
+    <param name="stop-on-bind-error" value="true"/>
+  </settings>
+</configuration>

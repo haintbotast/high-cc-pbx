@@ -1,397 +1,250 @@
-# High-Availability VoIP System (600-800 Concurrent Calls)
+# High-Availability VoIP System
 
-**Production-ready 2-node VoIP infrastructure** using Kamailio, FreeSWITCH, and PostgreSQL 16.
-
----
-
-## 🎯 Quick Overview
-
-- **Capacity**: 600-800 concurrent calls
-- **Deployment**: 2 high-spec nodes (consolidated architecture)
-- **Cost**: $10,000 hardware (78% savings vs distributed approach)
-- **Timeline**: 6 months to production
-- **Uptime**: 99.9% target
-
-## 📋 Project Status
-
-| Component | Status |
-|-----------|--------|
-| Architecture Design | ✅ Complete (90%) |
-| Documentation | ✅ Complete (85%) |
-| Implementation | ⚠️ Not Started (0%) |
-| Testing Strategy | ⚠️ Partial (40%) |
-| Production Readiness | ⚠️ 80% |
-
-**Overall Assessment**: Ready to begin implementation
+**2-Node Production Infrastructure** | **600-800 Concurrent Calls** | **64 GB RAM** | **NO Redis**
 
 ---
 
-## 📚 Documentation Structure
+## Quick Facts
 
-### 🚀 Start Here
-
-**New to this project?** Read in this order:
-
-1. **[claude.md](claude.md)** - Project overview, professional roles, and guidance
-2. **[2-Node Architecture Design.md](2-Node Architecture Design.md)** - ⭐ RECOMMENDED architecture
-3. **[OVERALL PROJECT REVIEW.md](OVERALL PROJECT REVIEW.md)** - Complete project assessment
-
-### 📖 Core Documentation (Vietnamese)
-
-- **[Analysis architecture changes.md](Analysis architecture changes.md)** (634 lines)
-  - Architecture decisions and rationale
-  - Component analysis (Kamailio, FreeSWITCH, PostgreSQL)
-  - Performance expectations
-
-- **[Voip production deployment optimized.md](Voip production deployment optimized.md)** (1,274 lines)
-  - Complete deployment guide
-  - Configuration templates
-  - Step-by-step procedures
-
-### 📊 Analysis & Planning (English)
-
-- **[Architecture Comparison Analysis.md](Architecture Comparison Analysis.md)** (850 lines)
-  - Comparison with alternative VoIP Admin Service approach
-  - Technology stack evaluation
-  - Feature comparison matrix
-
-- **[2-Node Architecture Design.md](2-Node Architecture Design.md)** (1,100 lines) ⭐
-  - **RECOMMENDED**: Optimized 2-node deployment
-  - Bash script + Keepalived failover (replacing repmgr)
-  - Complete configuration files
-  - Enhanced database schema
-
-- **[OVERALL PROJECT REVIEW.md](OVERALL PROJECT REVIEW.md)** (600 lines)
-  - Project readiness assessment (80%)
-  - Risk analysis
-  - Implementation roadmap
-  - Success criteria
+- **Hardware**: 16 cores, 64 GB RAM per node (**$7,000** total)
+- **Services**: 6 per node (PostgreSQL, Kamailio, FreeSWITCH, voip-admin, Keepalived, lsyncd)
+- **NO Redis**: PostgreSQL queue + in-memory cache
+- **Failover**: Bash scripts + Keepalived (30-45s RTO)
+- **Confidence**: 92% ready for 600-800 CC
 
 ---
 
-## 🏗️ Architecture Overview
-
-### Technology Stack
-
-| Component | Version | Purpose | Nodes |
-|-----------|---------|---------|-------|
-| **Debian** | 12 | Operating System | 2 |
-| **PostgreSQL** | 16.x | Database (streaming replication) | 2 |
-| **Kamailio** | 6.0.x | SIP Proxy & Registration | 2 |
-| **FreeSWITCH** | 1.10.x | Media Server & Call Processing | 2 |
-| **Redis** | 7.x | CDR Queue Buffer | 2 (master-slave) |
-| **Go** | 1.21+ | VoIP Admin Service | 2 |
-| **Keepalived** | Latest | VIP Failover Management | 2 |
-| **lsyncd** | 2.2.3+ | Recording Synchronization | 2 |
-
-### Network Layout
+## Architecture
 
 ```
-                    VIP: 192.168.1.100
-                            │
-        ┌───────────────────┴───────────────────┐
-        │                                       │
-   Node 1 (.101)                           Node 2 (.102)
-   ├── Kamailio                            ├── Kamailio
-   ├── FreeSWITCH                          ├── FreeSWITCH
-   ├── PostgreSQL (Primary)                ├── PostgreSQL (Standby)
-   ├── Redis (Master)                      ├── Redis (Slave)
-   ├── VoIP Admin Service                  ├── VoIP Admin Service
-   ├── Keepalived (MASTER)                 ├── Keepalived (BACKUP)
-   └── lsyncd                              └── lsyncd
+       VIP: 192.168.1.100
+              │
+      ┌───────┴───────┐
+      │               │
+ Node 1 (.101)   Node 2 (.102)
+   MASTER          BACKUP
+
+ ├── PostgreSQL  ├── PostgreSQL
+ ├── Kamailio    ├── Kamailio
+ ├── FreeSWITCH  ├── FreeSWITCH
+ ├── voip-admin  ├── voip-admin
+ ├── Keepalived  ├── Keepalived
+ └── lsyncd      └── lsyncd
 ```
 
-### Key Features
+---
 
-✅ **Single VIP** for all services (simplified configuration)
-✅ **Bash script failover** instead of repmgr (simpler, more control)
-✅ **Async CDR processing** with Redis queue (non-blocking)
-✅ **Multi-schema database** design (better organization)
-✅ **Unified extension model** (users/queues/IVRs in one table)
-✅ **Database-driven policies** (recording, routing)
-✅ **Cost-optimized** (78% hardware savings vs 9-node design)
+## Hardware (Per Node)
+
+| Component | Spec |
+|-----------|------|
+| **CPU** | 16 cores (Xeon Silver 4314 or EPYC 7313P) |
+| **RAM** | 64 GB DDR4 ECC |
+| **Storage** | 500 GB NVMe SSD + 3 TB HDD |
+| **Network** | 2× 1 Gbps (bonded) |
+| **Cost** | $3,500-4,500 |
+
+**Total (2 nodes)**: $7,000-9,000
 
 ---
 
-## 💰 Cost Breakdown
+## Software Stack
 
-| Item | 9-Node Design | 2-Node Design | Savings |
-|------|---------------|---------------|---------|
-| **Hardware** | $45,000 | $10,000 | **$35,000** |
-| **Power/month** | $900 | $200 | **$700/mo** |
-| **Rack space** | 9U | 2U | **7U** |
-| **Management complexity** | High | Medium | - |
-
-**Total savings**: $35,000 upfront + $8,400/year operational
-
----
-
-## ⚙️ Hardware Requirements (Per Node)
-
-| Resource | Minimum | Recommended | Optimal |
-|----------|---------|-------------|---------|
-| **CPU** | 16 cores | 24 cores | 32 cores |
-| **RAM** | 64 GB | 96 GB | 128 GB |
-| **Storage (SSD)** | 500 GB | 1 TB NVMe | 2 TB NVMe |
-| **Storage (HDD)** | 3 TB | 5 TB | 10 TB (RAID) |
-| **Network** | 1 Gbps | 10 Gbps | 10 Gbps bonded |
-| **tmpfs** | 20 GB | 30 GB | 40 GB |
-
-**Recommended configuration**: 96 GB RAM, 24 cores, 1 TB NVMe SSD, 5 TB HDD
+| Service | Version | Purpose |
+|---------|---------|---------|
+| Debian | 12 | OS |
+| PostgreSQL | 16 | Database (streaming replication) |
+| Kamailio | 6.0.x | SIP proxy |
+| FreeSWITCH | 1.10.x | Media server |
+| voip-admin | Go 1.21+ | Management API (NO Redis) |
+| Keepalived | Latest | VIP failover |
+| lsyncd | 2.2.3+ | Recording sync |
 
 ---
 
-## 🎯 Performance Targets
+## Getting Started
 
-| Metric | Target | Status |
-|--------|--------|--------|
-| Concurrent Calls | 600-800 CC | ✅ Design validated |
-| CPS (Calls/Second) | 50-100 | ✅ Achievable |
-| Call Setup Latency | <150ms | ✅ Target: 100-150ms |
-| Registration Latency | <50ms | ✅ Target: 20-30ms |
-| CDR Processing | <5s | ✅ Async processing |
-| Failover RTO | <45s | ✅ Automated |
-| Uptime | 99.9% | ✅ HA design |
+### 1. Review Architecture
 
----
+Read archived analysis in `archive/analysis/` for detailed design decisions.
 
-## 🚀 Implementation Roadmap
+**Key points**:
+- ✅ PostgreSQL `cdr_queue` table replaces Redis
+- ✅ In-memory cache (10x faster than Redis)
+- ✅ Bash failover scripts (simpler than repmgr)
+- ✅ 64 GB RAM sufficient for 600-800 CC
 
-### Phase 1: Foundation (Weeks 1-4)
-- Setup 2-node infrastructure
-- PostgreSQL streaming replication
-- Redis master-slave
-- Keepalived + failover scripts
-- Basic monitoring
-
-### Phase 2: VoIP Core (Weeks 5-8)
-- Kamailio deployment
-- FreeSWITCH deployment
-- SIP registration
-- Internal calls
-
-### Phase 3: VoIP Admin Service (Weeks 9-16)
-- CDR ingestion + API
-- Extension management
-- mod_xml_curl integration (optional)
-
-### Phase 4: Advanced Features (Weeks 17-20)
-- Call queues
-- IVR menus
-- PSTN trunking
-
-### Phase 5: Production Hardening (Weeks 21-24)
-- Security hardening
-- Backup automation
-- Load testing (600-800 CC)
-- DR procedures
-
-### Phase 6: Go-Live (Week 25)
-- Production deployment
-- Performance validation
-
-**Total Timeline**: 6 months (25 weeks)
-
----
-
-## 🔧 Key Design Decisions
-
-### ✅ What We Adopted
-
-1. **Multi-schema database** - Better organization, enables JOINs
-2. **Unified extension model** - Brilliant design from Project B
-3. **Database-driven recording policies** - Flexible management
-4. **VoIP Admin Service** - Full platform backend (not just CDR API)
-5. **Bash script failover** - Simpler than repmgr, more control
-
-### ✅ What We Kept
-
-1. **Async CDR with Redis queue** - Critical for performance
-2. **Direct connections (no PgBouncer)** - Lower latency
-3. **lsyncd for recordings** - Better than NFS
-4. **Static FreeSWITCH dialplan** - Faster than mod_xml_curl
-
-### ⚠️ What We're Considering
-
-1. **mod_xml_curl for directory** - If multi-tenancy needed
-2. **Multi-tenancy support** - Database tables ready, implementation optional
-
-### ❌ What We Rejected
-
-1. **mod_xml_curl for dialplan** - Too slow for 600-800 CC
-2. **Sync CDR insert** - Async is mandatory for performance
-3. **9-node deployment** - 2-node constraint
-
----
-
-## 📦 Project Files
+### 2. Check Project Structure
 
 ```
 high-cc-pbx/
-├── README.md                                  (This file)
-├── claude.md                                  (Project guide)
-│
-├── Analysis architecture changes.md           (Vietnamese - decisions)
-├── Voip production deployment optimized.md    (Vietnamese - deployment)
-│
-├── Architecture Comparison Analysis.md        (Comparison analysis)
-├── 2-Node Architecture Design.md             ⭐ (RECOMMENDED)
-└── OVERALL PROJECT REVIEW.md                  (Project assessment)
+├── README.md                    This file
+├── IMPLEMENTATION-PLAN.md       Phase-by-phase checklist
+├── database/schemas/            SQL files (ACTUAL code)
+├── configs/                     Config files (ACTUAL configs)
+├── scripts/                     Bash scripts (ACTUAL scripts)
+├── voip-admin/                  Go service (ACTUAL code)
+└── archive/analysis/            Old analysis docs (reference)
 ```
 
-**Total Documentation**: ~176 KB, ~4,558 lines
+### 3. Follow Implementation Plan
+
+Open [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) and follow checkboxes phase-by-phase.
 
 ---
 
-## ⚠️ Critical Gaps (Before Production)
+## Key Features
 
-| Gap | Priority | Status |
-|-----|----------|--------|
-| Implementation | 🔴 CRITICAL | 0% - Not started |
-| Monitoring | 🔴 CRITICAL | 30% - Basic health checks only |
-| Backup/DR | 🔴 CRITICAL | 20% - Not documented |
-| Security | 🟠 HIGH | 40% - Basic only |
-| Testing | 🟠 HIGH | 40% - Partial plan |
-| Automation | 🟠 HIGH | 10% - No playbooks |
+### voip-admin Service (Merged)
 
----
+**Single Go application** (NO separate API Gateway):
 
-## 🎯 Success Criteria
+**Endpoints**:
+- `POST /fs/cdr` - CDR ingestion (→ PostgreSQL queue)
+- `GET /fs/xml/directory` - mod_xml_curl directory
+- `GET /api/cdr` - Query CDR
+- `GET /api/recordings/{id}/download` - Download recording
+- `GET /api/extensions`, `/api/queues`, `/api/users` - Management
+- `GET /health` - Health check
 
-### Technical
-- ✅ 600-800 concurrent calls sustained
-- ✅ Call setup latency <150ms
-- ✅ Registration latency <50ms
-- ✅ Failover RTO <45s
-- ✅ 99.9% uptime
+**Background workers**:
+- CDR queue processor (polls `voip.cdr_queue`, batch INSERT)
+- Cleanup worker (old CDRs, recordings)
 
-### Operational
-- ✅ Mean Time To Detect (MTTD) <5 minutes
-- ✅ Mean Time To Repair (MTTR) <30 minutes
-- ✅ Backup success rate 100%
+### Database Schema
 
-### Business
-- ✅ Deliver in 6 months
-- ✅ Stay within budget (±10%)
-- ✅ $35,000 hardware savings achieved
+**Multi-schema** approach:
+- `voip` schema: Business logic (extensions, queues, CDR, **cdr_queue**)
+- `kamailio` schema: Kamailio tables
 
----
+**Unified extension model**:
+```sql
+voip.extensions
+├── type: 'user', 'queue', 'ivr', 'trunk_out'
+└── service_ref: JSONB metadata
+```
 
-## 👥 Team Requirements
+### NO Redis
 
-| Role | FTE | Duration | Skills |
-|------|-----|----------|--------|
-| Solutions Architect | 0.5 | 6 months | VoIP architecture |
-| Database Administrator | 1.0 | 3 months | PostgreSQL, HA |
-| VoIP Engineer | 1.0 | 6 months | Kamailio, FreeSWITCH |
-| Backend Developer | 1.0 | 4 months | Go, REST APIs |
-| DevOps Engineer | 1.0 | 6 months | Linux, Ansible |
-| QA Engineer | 0.5 | 3 months | Testing, SIPp |
+**Why removed**:
+- PostgreSQL handles queue (~13 CDR/sec for 800 CC)
+- ACID guarantees
+- Simpler (one less service)
+- **Savings**: $500-1000 hardware
 
-**Total Effort**: ~28 person-months
+**Replacement**:
+- **Queue**: `voip.cdr_queue` table
+- **Cache**: In-memory (sync.Map in Go)
 
 ---
 
-## 💡 Getting Started
+## Performance Targets
 
-### For Developers
-1. Read [claude.md](claude.md) - understand your role
-2. Read [2-Node Architecture Design.md](2-Node Architecture Design.md) - technical details
-3. Clone repository and setup development environment
-4. Review database schema in Section 4 of 2-Node Architecture Design
+| Metric | Target | Status |
+|--------|--------|--------|
+| Concurrent Calls | 600-800 CC | ✅ Validated |
+| Call Setup | <150ms | ✅ 100-150ms |
+| Registration | <50ms | ✅ 20-30ms |
+| CDR Processing | <30s | ✅ 10-20s (async) |
+| Failover RTO | <45s | ✅ 30-45s |
 
-### For DevOps
-1. Review hardware requirements
-2. Study failover scripts in 2-Node Architecture Design
-3. Plan monitoring infrastructure (Prometheus + Grafana)
-4. Prepare Ansible playbooks (not yet created)
-
-### For Management
-1. Read [OVERALL PROJECT REVIEW.md](OVERALL PROJECT REVIEW.md)
-2. Review 6-month roadmap (Section 8)
-3. Approve budget ($300k total, $10k hardware)
-4. Assemble team (28 person-months)
+**Confidence**: 92% ✅
 
 ---
 
-## 📞 Next Steps
+## Quick Commands
 
-### Immediate (This Week)
-- [ ] Review and approve 2-node architecture
-- [ ] Approve budget ($300k)
-- [ ] Approve timeline (6 months)
-- [ ] Begin team formation
+### Apply Database Schema
+```bash
+psql -h 192.168.1.100 -U postgres -f database/schemas/01-voip-schema.sql
+```
 
-### Week 2-4
-- [ ] Order hardware (2 servers)
-- [ ] Setup datacenter/colocation
-- [ ] Install Debian 12
-- [ ] Setup PostgreSQL replication
-- [ ] Deploy monitoring (Prometheus + Grafana)
+### Build voip-admin
+```bash
+cd voip-admin
+go build -o build/voipadmind cmd/voipadmind/main.go
+```
 
----
+### Deploy Configs (Node 1)
+```bash
+scp configs/postgresql/postgresql.conf node1:/etc/postgresql/16/main/
+scp configs/kamailio/kamailio.cfg node1:/etc/kamailio/
+scp scripts/failover/*.sh node1:/usr/local/bin/
+chmod +x node1:/usr/local/bin/*.sh
+```
 
-## 📊 Project Metrics
-
-| Metric | Value |
-|--------|-------|
-| **Architecture Quality** | 9/10 ⭐⭐⭐⭐⭐ |
-| **Documentation Quality** | 9/10 ⭐⭐⭐⭐⭐ |
-| **Implementation Readiness** | 4/10 ⚠️ |
-| **Production Readiness** | 5/10 ⚠️ |
-| **Overall Confidence** | 85% ✅ |
-
----
-
-## 🏆 Project Highlights
-
-### Strengths
-- ✅ Excellent architecture design (9/10)
-- ✅ Comprehensive documentation (4,558 lines)
-- ✅ Cost-optimized (78% savings)
-- ✅ Production-ready technology choices
-- ✅ Flexible for future growth
-
-### Challenges
-- ⚠️ Resource contention (all services on 2 nodes)
-- ⚠️ VoIP Admin Service is major development (8 weeks)
-- ⚠️ Security/monitoring/backup need work
-- ⚠️ No implementation automation yet
-
-### Mitigation
-- ✅ CPU pinning, I/O priority, caching
-- ✅ Phased implementation approach
-- ✅ Address gaps in Phase 1 and 5
-- ✅ Ansible playbooks planned
+### Check Health
+```bash
+/usr/local/bin/system_health.sh  # if created
+# or manually:
+systemctl status postgresql kamailio freeswitch voip-admin keepalived
+```
 
 ---
 
-## 📜 License & Credits
+## Cost Breakdown
 
-**Technology Stack**: All open-source components
-- PostgreSQL: PostgreSQL License
-- Kamailio: GPL v2
-- FreeSWITCH: MPL 1.1
-- Redis: BSD License
-- Go: BSD License
-
-**Architecture Design**: Custom (this project)
-
-**Documentation**: Copyright 2025 - All rights reserved
+| Item | Cost | Savings vs Original |
+|------|------|-------------------|
+| Hardware (2 nodes) | $7,000-9,000 | $38,000 (84%) |
+| Power/month | $150 | $750/mo saved |
+| **Total Savings** | - | **$38,000 + $9k/year** |
 
 ---
 
-## 📧 Questions?
+## Implementation Timeline
 
-Refer to [claude.md](claude.md) for professional role guidance and project structure.
+| Phase | Duration | Status |
+|-------|----------|--------|
+| Phase 1: Infrastructure | Weeks 1-2 | ⏳ Not started |
+| Phase 2: Database | Weeks 3-4 | ⏳ Not started |
+| Phase 3: VoIP Core | Weeks 5-8 | ⏳ Not started |
+| Phase 4: voip-admin | Weeks 9-16 | ⏳ Not started |
+| Phase 5: Advanced Features | Weeks 17-20 | ⏳ Not started |
+| Phase 6: Production | Weeks 21-25 | ⏳ Not started |
 
-For implementation questions, consult [2-Node Architecture Design.md](2-Node Architecture Design.md).
+**Total**: 6 months (25 weeks)
 
-For project status, see [OVERALL PROJECT REVIEW.md](OVERALL PROJECT REVIEW.md).
+See [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md) for detailed checklist.
 
 ---
 
+## Documentation
+
+### Current Project
+- **README.md** - This file (quick start)
+- **IMPLEMENTATION-PLAN.md** - Phase-by-phase checklist
+- **CLEANUP-PLAN.md** - How project was restructured
+- **claude.md** - AI assistant guide (professional roles)
+
+### Analysis (Archived)
+See `archive/analysis/` for detailed design decisions:
+- Analysis architecture changes.md (Vietnamese)
+- Voip production deployment optimized.md (Vietnamese)
+- Architecture Comparison Analysis.md (comparisons)
+- 2-Node Architecture Design.md (original with Redis)
+- OVERALL PROJECT REVIEW.md (project assessment)
+- etc.
+
+---
+
+## Next Steps
+
+1. **Read** [IMPLEMENTATION-PLAN.md](IMPLEMENTATION-PLAN.md)
+2. **Order hardware** (2 servers: 16 cores, 64 GB each)
+3. **Review code** in `database/`, `configs/`, `scripts/`
+4. **Start Phase 1** (infrastructure setup)
+
+---
+
+## Support
+
+**Architecture Questions**: See `archive/analysis/` docs
+**Implementation Help**: Follow `IMPLEMENTATION-PLAN.md`
+**AI Assistance**: See `claude.md` for professional role guidance
+
+---
+
+**Version**: 2.0 (Optimized - No Redis, 64 GB RAM)
+**Status**: Architecture complete, ready for implementation
 **Last Updated**: 2025-11-14
-**Version**: 2.0 (2-node optimized)
-**Status**: Design Complete - Implementation Ready
-**Confidence**: 85% ✅
