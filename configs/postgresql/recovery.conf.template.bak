@@ -12,7 +12,7 @@
 # PostgreSQL 16 uses standby.signal file instead of recovery.conf
 
 # Primary connection string (update with actual primary IP)
-primary_conninfo = 'host=172.16.91.101 port=5432 user=replicator password=YOUR_REPLICATOR_PASSWORD application_name=node2'
+primary_conninfo = 'host=192.168.1.101 port=5432 user=replicator password=YOUR_REPLICATOR_PASSWORD application_name=node2'
 
 # Slot name on primary (must be created first)
 primary_slot_name = 'node2_slot'
@@ -31,7 +31,7 @@ promote_trigger_file = '/tmp/postgresql.trigger.5432'
 # SETUP INSTRUCTIONS
 # =============================================================================
 #
-# On PRIMARY (Node 1 - 172.16.91.101):
+# On PRIMARY (Node 1 - 192.168.1.101):
 # -----------------------------------------
 # 1. Create replication user:
 #    sudo -u postgres psql
@@ -46,7 +46,7 @@ promote_trigger_file = '/tmp/postgresql.trigger.5432'
 #
 # 4. Ensure pg_hba.conf allows replication from standby
 #
-# On STANDBY (Node 2 - 172.16.91.102):
+# On STANDBY (Node 2 - 192.168.1.102):
 # -----------------------------------------
 # 1. Stop PostgreSQL:
 #    sudo systemctl stop postgresql
@@ -55,7 +55,7 @@ promote_trigger_file = '/tmp/postgresql.trigger.5432'
 #    sudo mv /var/lib/postgresql/16/main /var/lib/postgresql/16/main.backup
 #
 # 3. Create base backup from primary:
-#    sudo -u postgres pg_basebackup -h 172.16.91.101 -U replicator \
+#    sudo -u postgres pg_basebackup -h 192.168.1.101 -U replicator \
 #      -D /var/lib/postgresql/16/main -P -Xs -R
 #    (The -R flag automatically creates standby.signal and sets primary_conninfo)
 #

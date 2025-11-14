@@ -19,9 +19,9 @@
       </aliases>
 
       <settings>
-        <param name="sip-ip" value="172.16.91.101"/>  <!-- Change per node -->
+        <param name="sip-ip" value="192.168.1.101"/>  <!-- Change per node -->
         <param name="sip-port" value="5080"/>
-        <param name="rtp-ip" value="172.16.91.101"/>  <!-- Change per node -->
+        <param name="rtp-ip" value="192.168.1.101"/>  <!-- Change per node -->
         <param name="context" value="default"/>
         <param name="dialplan" value="XML"/>
 

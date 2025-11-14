@@ -7,7 +7,7 @@
   <bindings>
     <!-- Directory (extension authentication) -->
     <binding name="directory">
-      <param name="gateway-url" value="http://172.16.91.100:8080/freeswitch/directory" bindings="directory"/>
+      <param name="gateway-url" value="http://192.168.1.100:8080/freeswitch/directory" bindings="directory"/>
       <param name="gateway-credentials" value="freeswitch:API_KEY_HERE"/>
       <param name="timeout" value="5"/>
       <param name="enable-cacert-check" value="false"/>
@@ -16,7 +16,7 @@
 
     <!-- Dialplan (call routing) -->
     <binding name="dialplan">
-      <param name="gateway-url" value="http://172.16.91.100:8080/freeswitch/dialplan" bindings="dialplan"/>
+      <param name="gateway-url" value="http://192.168.1.100:8080/freeswitch/dialplan" bindings="dialplan"/>
       <param name="gateway-credentials" value="freeswitch:API_KEY_HERE"/>
       <param name="timeout" value="5"/>
       <param name="enable-cacert-check" value="false"/>
@@ -25,7 +25,7 @@
 
     <!-- Configuration (optional - for dynamic configs) -->
     <binding name="configuration">
-      <param name="gateway-url" value="http://172.16.91.100:8080/freeswitch/configuration" bindings="configuration"/>
+      <param name="gateway-url" value="http://192.168.1.100:8080/freeswitch/configuration" bindings="configuration"/>
       <param name="gateway-credentials" value="freeswitch:API_KEY_HERE"/>
       <param name="timeout" value="5"/>
       <param name="enable-cacert-check" value="false"/>

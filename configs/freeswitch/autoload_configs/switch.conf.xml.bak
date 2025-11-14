@@ -13,7 +13,7 @@
     <param name="rtp-end-port" value="32768"/>
 
     <!-- Memory -->
-    <param name="core-db-dsn" value="pgsql://host=172.16.91.100 dbname=voip user=freeswitch password=PASSWORD options='-c search_path=voip'"/>
+    <param name="core-db-dsn" value="pgsql://host=192.168.1.100 dbname=voip user=freeswitch password=PASSWORD options='-c search_path=voip'"/>
 
     <!-- Logging -->
     <param name="loglevel" value="info"/>

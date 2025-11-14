@@ -11,7 +11,7 @@ server:
   idle_timeout: 120s
 
 database:
-  host: "172.16.91.100"      # VIP address
+  host: "192.168.1.100"      # VIP address
   port: 5432
   user: "voipadmin"
   password: "CHANGE_ME"

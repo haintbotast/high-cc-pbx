@@ -1,7 +1,7 @@
 -- =============================================================================
--- lsyncd Configuration for Node 2
+-- lsyncd Configuration for Node 1
 -- Description: Bidirectional recording synchronization
--- Syncs: /var/lib/freeswitch/recordings/ to Node 1
+-- Syncs: /var/lib/freeswitch/recordings/ to Node 2
 -- =============================================================================
 
 settings {
@@ -15,11 +15,11 @@ settings {
     maxProcesses = 4
 }
 
--- Sync recordings to Node 1 via rsync over SSH
+-- Sync recordings to Node 2 via rsync over SSH
 sync {
     default.rsync,
     source = "/var/lib/freeswitch/recordings/",
-    target = "root@172.16.91.101:/var/lib/freeswitch/recordings/",
+    target = "root@192.168.1.102:/var/lib/freeswitch/recordings/",
 
     delay = 5,  -- Delay in seconds before syncing
 
@@ -57,11 +57,11 @@ sync {
 -- 2. Create SSH key for passwordless authentication:
 --    ssh-keygen -t rsa -b 4096 -f /root/.ssh/lsyncd_rsa -N ""
 --
--- 3. Copy public key to Node 1:
---    ssh-copy-id -i /root/.ssh/lsyncd_rsa.pub root@172.16.91.101
+-- 3. Copy public key to Node 2:
+--    ssh-copy-id -i /root/.ssh/lsyncd_rsa.pub root@192.168.1.102
 --
 -- 4. Test SSH connection:
---    ssh -i /root/.ssh/lsyncd_rsa root@172.16.91.101 "echo OK"
+--    ssh -i /root/.ssh/lsyncd_rsa root@192.168.1.102 "echo OK"
 --
 -- 5. Create log directory:
 --    mkdir -p /var/log/lsyncd

@@ -19,7 +19,7 @@ settings {
 sync {
     default.rsync,
     source = "/var/lib/freeswitch/recordings/",
-    target = "root@192.168.1.102:/var/lib/freeswitch/recordings/",
+    target = "root@172.16.91.102:/var/lib/freeswitch/recordings/",
 
     delay = 5,  -- Delay in seconds before syncing
 
@@ -58,10 +58,10 @@ sync {
 --    ssh-keygen -t rsa -b 4096 -f /root/.ssh/lsyncd_rsa -N ""
 --
 -- 3. Copy public key to Node 2:
---    ssh-copy-id -i /root/.ssh/lsyncd_rsa.pub root@192.168.1.102
+--    ssh-copy-id -i /root/.ssh/lsyncd_rsa.pub root@172.16.91.102
 --
 -- 4. Test SSH connection:
---    ssh -i /root/.ssh/lsyncd_rsa root@192.168.1.102 "echo OK"
+--    ssh -i /root/.ssh/lsyncd_rsa root@172.16.91.102 "echo OK"
 --
 -- 5. Create log directory:
 --    mkdir -p /var/log/lsyncd

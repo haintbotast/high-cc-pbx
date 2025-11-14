@@ -17,7 +17,7 @@
 ## Architecture
 
 ```
-       VIP: 172.16.91.100
+       VIP: 192.168.1.100
               │
       ┌───────┴───────┐
       │               │
@@ -156,7 +156,7 @@ voip.extensions
 
 ### Apply Database Schema
 ```bash
-psql -h 172.16.91.100 -U postgres -f database/schemas/01-voip-schema.sql
+psql -h 192.168.1.100 -U postgres -f database/schemas/01-voip-schema.sql
 ```
 
 ### Build voip-admin

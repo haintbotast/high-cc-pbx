@@ -6,7 +6,7 @@
 <configuration name="cdr_pg_csv.conf" description="CDR PostgreSQL CSV">
   <settings>
     <!-- Database connection -->
-    <param name="db-dsn" value="pgsql://host=172.16.91.100 dbname=voip user=freeswitch password=PASSWORD options='-c search_path=voip'"/>
+    <param name="db-dsn" value="pgsql://host=192.168.1.100 dbname=voip user=freeswitch password=PASSWORD options='-c search_path=voip'"/>
 
     <!-- Table name -->
     <param name="db-table" value="cdr_queue"/>

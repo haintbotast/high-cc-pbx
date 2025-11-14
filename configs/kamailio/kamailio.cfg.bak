@@ -16,18 +16,18 @@
 #!define WITH_ACCDB
 
 # Database connection
-#!define DBURL "postgres://kamailio:PASSWORD@172.16.91.100/kamailio"
+#!define DBURL "postgres://kamailio:PASSWORD@192.168.1.100/kamailio"
 
 # FreeSWITCH dispatcher set
 #!define DS_SETID 1
 
 # SIP listen addresses
-listen=udp:172.16.91.100:5060
-listen=tcp:172.16.91.100:5060
-listen=udp:172.16.91.101:5060
-listen=tcp:172.16.91.101:5060
-listen=udp:172.16.91.102:5060
-listen=tcp:172.16.91.102:5060
+listen=udp:192.168.1.100:5060
+listen=tcp:192.168.1.100:5060
+listen=udp:192.168.1.101:5060
+listen=tcp:192.168.1.101:5060
+listen=udp:192.168.1.102:5060
+listen=tcp:192.168.1.102:5060
 
 # Aliases
 alias=voip.example.com

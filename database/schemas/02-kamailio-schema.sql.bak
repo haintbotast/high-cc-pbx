@@ -147,8 +147,8 @@ CREATE TABLE dispatcher (
 CREATE INDEX dispatcher_setid_idx ON dispatcher (setid);
 
 INSERT INTO dispatcher (setid, destination, flags, priority, attrs, description) VALUES
-(1, 'sip:172.16.91.101:5080', 0, 1, 'weight=50', 'FreeSWITCH Node 1'),
-(1, 'sip:172.16.91.102:5080', 0, 1, 'weight=50', 'FreeSWITCH Node 2');
+(1, 'sip:192.168.1.101:5080', 0, 1, 'weight=50', 'FreeSWITCH Node 1'),
+(1, 'sip:192.168.1.102:5080', 0, 1, 'weight=50', 'FreeSWITCH Node 2');
 
 -- =============================================================================
 -- ACCOUNTING (CDR generation - minimal, detailed CDR in voip.cdr)

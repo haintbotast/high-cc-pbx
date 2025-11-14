@@ -1,0 +1,61 @@
+# =============================================================================
+# Keepalived Configuration for Node 2 (Backup)
+# Virtual IP: 192.168.1.100
+# Node 1 IP: 192.168.1.101
+# Node 2 IP: 192.168.1.102
+# =============================================================================
+
+global_defs {
+    router_id VOIP_NODE2
+    script_user root
+    enable_script_security
+}
+
+# Health check script for VoIP services
+vrrp_script check_voip_services {
+    script "/usr/local/bin/check_voip_health.sh"
+    interval 5          # Check every 5 seconds
+    timeout 3           # Script timeout
+    weight -20          # Decrease priority by 20 if check fails
+    fall 3              # Require 3 failures before triggering
+    rise 2              # Require 2 successes to recover
+}
+
+# VRRP instance for VoIP cluster
+vrrp_instance VOIP_HA {
+    state BACKUP                    # Node 2 starts as BACKUP
+    interface eth0                  # Network interface (adjust as needed)
+    virtual_router_id 51            # Must match Node 1
+    priority 90                     # Lower than Node 1 (100)
+    advert_int 1                    # Advertisement interval (1 second)
+
+    # Authentication
+    authentication {
+        auth_type PASS
+        auth_pass VoIPHA2025         # Must match Node 1!
+    }
+
+    # Virtual IP address
+    virtual_ipaddress {
+        192.168.1.100/24 dev eth0 label eth0:vip
+    }
+
+    # Track health check script
+    track_script {
+        check_voip_services
+    }
+
+    # Notify scripts
+    notify_master "/usr/local/bin/failover_master.sh"
+    notify_backup "/usr/local/bin/failover_backup.sh"
+    notify_fault "/usr/local/bin/failover_fault.sh"
+
+    # Preemption settings
+    nopreempt                       # Don't automatically take over when recovering
+
+    # Use unicast instead of multicast (optional, better for some networks)
+    # unicast_src_ip 192.168.1.102
+    # unicast_peer {
+    #     192.168.1.101
+    # }
+}

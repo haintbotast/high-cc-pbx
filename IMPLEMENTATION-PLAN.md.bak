@@ -16,8 +16,8 @@
 - [ ] Setup datacenter rack or colocation
 
 ### OS Installation (Both Nodes)
-- [ ] Install Debian 12 on Node 1 (172.16.91.101)
-- [ ] Install Debian 12 on Node 2 (172.16.91.102)
+- [ ] Install Debian 12 on Node 1 (192.168.1.101)
+- [ ] Install Debian 12 on Node 2 (192.168.1.102)
 - [ ] Configure network interfaces (static IP, bonding if needed)
 - [ ] Configure NTP time synchronization
 - [ ] Apply OS security hardening (firewall, SELinux/AppArmor)
@@ -56,7 +56,7 @@
   ```bash
   systemctl stop postgresql
   rm -rf /var/lib/postgresql/16/main/*
-  pg_basebackup -h 172.16.91.101 -U replicator -D /var/lib/postgresql/16/main -P -R
+  pg_basebackup -h 192.168.1.101 -U replicator -D /var/lib/postgresql/16/main -P -R
   touch /var/lib/postgresql/16/main/standby.signal
   systemctl start postgresql
   ```
@@ -125,7 +125,7 @@
 - [ ] Start Keepalived on Node 2
 - [ ] Verify VIP is on Node 1
   ```bash
-  ip addr show | grep 172.16.91.100
+  ip addr show | grep 192.168.1.100
   ```
 - [ ] Test failover: Stop keepalived on Node 1
   ```bash
@@ -156,19 +156,19 @@
 - [ ] Both nodes: Deploy kamailio.cfg
   ```bash
   cp configs/kamailio/kamailio.cfg /etc/kamailio/
-  # Edit: Set IP addresses, DB connection to VIP 172.16.91.100
+  # Edit: Set IP addresses, DB connection to VIP 192.168.1.100
   ```
 - [ ] Both nodes: Configure db_mode=2 (write-back)
   ```cfg
   # In kamailio.cfg:
   modparam("usrloc", "db_mode", 2)
-  modparam("usrloc", "db_url", "postgres://kamailio:password@172.16.91.100/voip_platform")
+  modparam("usrloc", "db_url", "postgres://kamailio:password@192.168.1.100/voip_platform")
   ```
 - [ ] Node 1: Insert FreeSWITCH into dispatcher
   ```sql
   INSERT INTO kamailio.dispatcher (setid, destination, flags, description)
-  VALUES (1, 'sip:172.16.91.101:5080', 0, 'FreeSWITCH Node 1'),
-         (1, 'sip:172.16.91.102:5080', 0, 'FreeSWITCH Node 2');
+  VALUES (1, 'sip:192.168.1.101:5080', 0, 'FreeSWITCH Node 1'),
+         (1, 'sip:192.168.1.102:5080', 0, 'FreeSWITCH Node 2');
   ```
 - [ ] Both nodes: Start Kamailio
   ```bash
@@ -182,7 +182,7 @@
   ```
 
 ### SIP Testing
-- [ ] Register SIP phone to VIP (172.16.91.100:5060)
+- [ ] Register SIP phone to VIP (192.168.1.100:5060)
 - [ ] Check registration
   ```bash
   kamcmd ul.dump
@@ -228,7 +228,7 @@
 - [ ] Both nodes: Deploy json_cdr.conf.xml
   ```bash
   cp configs/freeswitch/autoload_configs/json_cdr.conf.xml /etc/freeswitch/autoload_configs/
-  # Edit: url=http://172.16.91.100:8080/fs/cdr (VoIP Admin)
+  # Edit: url=http://192.168.1.100:8080/fs/cdr (VoIP Admin)
   ```
 - [ ] Both nodes: Start FreeSWITCH
   ```bash
@@ -437,7 +437,7 @@
 - [ ] Create PostgreSQL backup script
   ```bash
   #!/bin/bash
-  pg_basebackup -h 172.16.91.100 -U postgres -D /backup/pg-$(date +%Y%m%d) -P
+  pg_basebackup -h 192.168.1.100 -U postgres -D /backup/pg-$(date +%Y%m%d) -P
   ```
 - [ ] Setup WAL archiving
 - [ ] Create recording backup script (rsync to off-site)
@@ -452,7 +452,7 @@
 - [ ] Install SIPp on test machine
 - [ ] Create SIPp scenarios
   ```bash
-  sipp -sf scenarios/call.xml -s 1001 172.16.91.100 -r 10 -l 100
+  sipp -sf scenarios/call.xml -s 1001 192.168.1.100 -r 10 -l 100
   ```
 - [ ] Test 100 CC
 - [ ] Test 400 CC
@@ -496,7 +496,7 @@
 ### Cutover (if from old system)
 - [ ] Schedule maintenance window
 - [ ] Backup old system
-- [ ] Update DNS/routing to VIP 172.16.91.100
+- [ ] Update DNS/routing to VIP 192.168.1.100
 - [ ] Migrate users/extensions data
 - [ ] Test sample calls
 - [ ] Monitor for 24 hours
