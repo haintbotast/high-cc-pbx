@@ -14,8 +14,8 @@ STATE="${3:-UNKNOWN}"
 PRIORITY="${4:-0}"
 
 PSQL="/usr/bin/psql"
-PGDATA="/var/lib/postgresql/18/main"
-PG_CTL="/usr/lib/postgresql/18/bin/pg_ctl"
+PGDATA="/var/lib/postgresql/16/main"
+PG_CTL="/usr/lib/postgresql/16/bin/pg_ctl"
 
 echo "========================================="
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Notify"
@@ -210,7 +210,7 @@ case "$STATE" in
 
         # Check service status
         echo "Service status:"
-        systemctl systemctl is-active --quiet postgresql-18 && echo "  PostgreSQL: Running" || echo "  PostgreSQL: FAILED"
+        systemctl is-active --quiet postgresql-16 && echo "  PostgreSQL: Running" || echo "  PostgreSQL: FAILED"
         systemctl is-active --quiet kamailio && echo "  Kamailio: Running" || echo "  Kamailio: FAILED"
         systemctl is-active --quiet freeswitch && echo "  FreeSWITCH: Running" || echo "  FreeSWITCH: FAILED"
         systemctl is-active --quiet voip-admin && echo "  VoIP Admin: Running" || echo "  VoIP Admin: FAILED"

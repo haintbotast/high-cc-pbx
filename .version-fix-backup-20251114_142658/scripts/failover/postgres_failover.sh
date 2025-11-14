@@ -8,7 +8,7 @@
 set -euo pipefail
 
 LOGFILE="/var/log/postgres-failover.log"
-PGDATA="/var/lib/postgresql/18/main"
+PGDATA="/var/lib/postgresql/16/main"
 PGUSER="postgres"
 
 log() {
@@ -28,7 +28,7 @@ promote_to_primary() {
 
     # Promote
     log "Executing pg_ctl promote..."
-    sudo -u $PGUSER /usr/lib/postgresql/18/bin/pg_ctl promote -D "$PGDATA"
+    sudo -u $PGUSER /usr/lib/postgresql/16/bin/pg_ctl promote -D "$PGDATA"
 
     # Wait for promotion (max 30 seconds)
     for i in {1..30}; do

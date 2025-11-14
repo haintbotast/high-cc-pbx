@@ -317,7 +317,7 @@ REPL_PASSWORD="$PG_REPL_PASSWORD"
 SCRIPTEOF
 
     cat >> "$OUTPUT_DIR/$node/scripts/safe_rebuild_standby.sh" << 'SCRIPTEOF'
-PGDATA="/var/lib/pgsql/${PG_VERSION}/data"
+PGDATA="/var/lib/postgresql/${PG_VERSION}/main"
 LOG_FILE="/var/log/rebuild_standby.log"
 
 # Use first argument as master IP, or default to peer

@@ -167,7 +167,7 @@ go build -o build/voipadmind cmd/voipadmind/main.go
 
 ### Deploy Configs (Node 1)
 ```bash
-scp configs/postgresql/postgresql.conf node1:/etc/postgresql/18/main/
+scp configs/postgresql/postgresql.conf node1:/etc/postgresql/16/main/
 scp configs/kamailio/kamailio.cfg node1:/etc/kamailio/
 scp scripts/failover/*.sh node1:/usr/local/bin/
 chmod +x node1:/usr/local/bin/*.sh

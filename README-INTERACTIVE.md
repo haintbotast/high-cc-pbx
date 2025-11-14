@@ -210,7 +210,7 @@ Total system: **2 nodes** = $7,000 hardware cost
 keepalived -t -f generated-configs/node1/keepalived/keepalived.conf
 
 # PostgreSQL
-sudo -u postgres /usr/pgsql-18/bin/postgres -C data_directory
+sudo -u postgres /usr/lib/postgresql/18/bin/postgres -C data_directory
 
 # Kamailio
 kamailio -c -f generated-configs/node1/kamailio/kamailio.cfg

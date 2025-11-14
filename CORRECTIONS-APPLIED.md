@@ -9,7 +9,7 @@
 
 **Fixed**:
 - ✅ Interactive wizard now uses PostgreSQL 18 as default
-- ✅ All generated configs use `/var/lib/pgsql/18/data`
+- ✅ All generated configs use `/var/lib/postgresql/18/main`
 - ✅ Scripts reference `postgresql-18` service
 - ✅ Matches your production PostgreSQL HA setup exactly
 
@@ -193,8 +193,8 @@ vrrp_instance VI_VOIP {
 All generated configs now correctly use PostgreSQL 18:
 
 ### Paths:
-- PGDATA: `/var/lib/pgsql/18/data`
-- Binaries: `/usr/pgsql-18/bin/`
+- PGDATA: `/var/lib/postgresql/18/main`
+- Binaries: `/usr/lib/postgresql/18/bin/`
 - Service: `postgresql-18`
 
 ### In safe_rebuild_standby.sh:
@@ -203,15 +203,15 @@ PG_VERSION="18"  # From wizard (default 18)
 PGDATA="/var/lib/pgsql/${PG_VERSION}/data"
 
 # Uses correct paths:
-/usr/pgsql-18/bin/pg_basebackup ...
-systemctl start postgresql-18
+/usr/lib/postgresql/18/bin/pg_basebackup ...
+systemctl systemctl start postgresql-18
 ```
 
 ### In keepalived_notify.sh:
 ```bash
-PSQL="/usr/pgsql-18/bin/psql"
-PGDATA="/var/lib/pgsql/18/data"
-PG_CTL="/usr/pgsql-18/bin/pg_ctl"
+PSQL="/usr/lib/postgresql/18/bin/psql"
+PGDATA="/var/lib/postgresql/18/main"
+PG_CTL="/usr/lib/postgresql/18/bin/pg_ctl"
 ```
 
 ---

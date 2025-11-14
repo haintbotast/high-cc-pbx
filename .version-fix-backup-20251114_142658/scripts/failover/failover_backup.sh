@@ -31,7 +31,7 @@ sleep 3
 
 # 1. Ensure PostgreSQL is in standby mode
 log "Checking PostgreSQL status..."
-if sudo -u postgres test -f /var/lib/postgresql/18/main/standby.signal; then
+if sudo -u postgres test -f /var/lib/postgresql/16/main/standby.signal; then
     log "PostgreSQL is already standby"
 else
     log "WARNING: PostgreSQL is primary but node is BACKUP"

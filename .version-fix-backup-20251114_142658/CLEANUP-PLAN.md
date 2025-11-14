@@ -206,7 +206,7 @@ shared_buffers = 12GB
 set -euo pipefail
 
 promote_to_primary() {
-    sudo -u postgres /usr/lib/postgresql/18/bin/pg_ctl promote -D /var/lib/postgresql/18/main
+    sudo -u postgres /usr/lib/postgresql/16/bin/pg_ctl promote -D /var/lib/postgresql/16/main
 }
 ...
 ```

@@ -1,6 +1,6 @@
 # High-Availability VoIP System (600-800 CC)
 
-This project contains architecture documentation and deployment guides for a production-grade VoIP system using FreeSWITCH, Kamailio, and PostgreSQL 18.
+This project contains architecture documentation and deployment guides for a production-grade VoIP system using FreeSWITCH, Kamailio, and PostgreSQL 16.
 
 ## Project Overview
 
@@ -33,7 +33,7 @@ See [Architecture Comparison Analysis.md](Architecture Comparison Analysis.md) f
 ### Core Stack
 - **Kamailio 6.x**: SIP Proxy, Registration, Authentication (2 nodes)
 - **FreeSWITCH 1.10.x**: Media Processing, Call Handling (2 nodes)
-- **PostgreSQL 18**: Primary Database with repmgr HA (2 nodes)
+- **PostgreSQL 16**: Primary Database with repmgr HA (2 nodes)
 - **API Gateway (Go)**: Async CDR Processing (2 instances)
 - **Redis 7.x**: CDR Queue Buffer (1 instance)
 - **Keepalived**: VIP Management (all nodes)
@@ -49,9 +49,9 @@ See [Architecture Comparison Analysis.md](Architecture Comparison Analysis.md) f
 When working on this project, adopt the appropriate professional role based on the component:
 
 ### 1. Database Architect & PostgreSQL DBA
-**Scope**: PostgreSQL 18 HA, repmgr, Database Optimization
+**Scope**: PostgreSQL 16 HA, repmgr, Database Optimization
 **Expertise Required**:
-- PostgreSQL 18 advanced features and tuning
+- PostgreSQL 16 advanced features and tuning
 - Streaming replication and WAL management
 - repmgr for automatic failover (2-node clusters)
 - Connection pooling strategies (without PgBouncer)
@@ -334,7 +334,7 @@ When working on this project, adopt the appropriate professional role based on t
 ### Key Design Choices
 
 1. **No PgBouncer**
-   - **Rationale**: PostgreSQL 18 can handle 300 connections directly
+   - **Rationale**: PostgreSQL 16 can handle 300 connections directly
    - **Benefit**: Reduced latency (1-2ms), simpler architecture
    - **Trade-off**: Higher connection overhead on PostgreSQL
 
@@ -671,7 +671,7 @@ Based on comparison with alternative architectures, consider these enhancements 
 
 - Kamailio Documentation: https://www.kamailio.org/docs/
 - FreeSWITCH Documentation: https://freeswitch.org/confluence/
-- PostgreSQL 18 Manual: https://www.postgresql.org/docs/18/
+- PostgreSQL 16 Manual: https://www.postgresql.org/docs/16/
 - repmgr Documentation: https://repmgr.org/docs/current/
 - Keepalived Documentation: https://www.keepalived.org/doc/
 

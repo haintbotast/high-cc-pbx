@@ -31,7 +31,7 @@ sleep 3
 
 # 1. Promote PostgreSQL if standby
 log "Checking PostgreSQL status..."
-if sudo -u postgres test -f /var/lib/postgresql/18/main/standby.signal; then
+if sudo -u postgres test -f /var/lib/postgresql/16/main/standby.signal; then
     log "PostgreSQL is standby, promoting..."
     /usr/local/bin/postgres_failover.sh promote || log "ERROR: PostgreSQL promotion failed"
 else

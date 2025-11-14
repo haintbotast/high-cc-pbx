@@ -160,28 +160,28 @@ api:
 - [ ] 1.5. Update system: `apt update && apt upgrade -y`
 - [ ] 1.6. Install base packages:
   ```bash
-  apt install -y postgresql-18 postgresql-contrib-18 postgresql-client-16 \
+  apt install -y postgresql-16 postgresql-client-16 \
     keepalived lsyncd curl wget vim net-tools \
     build-essential git
   ```
 
 ### Phase 2: PostgreSQL Setup (Node 1)
 
-- [ ] 2.1. Stop PostgreSQL: `systemctl systemctl stop postgresql-18`
+- [ ] 2.1. Stop PostgreSQL: `systemctl stop postgresql-16`
 - [ ] 2.2. Deploy postgresql.conf:
   ```bash
-  cp configs/postgresql/postgresql.conf /etc/postgresql/18/main/
+  cp configs/postgresql/postgresql.conf /etc/postgresql/16/main/
   ```
 - [ ] 2.3. Deploy pg_hba.conf:
   ```bash
-  cp configs/postgresql/pg_hba.conf /etc/postgresql/18/main/
+  cp configs/postgresql/pg_hba.conf /etc/postgresql/16/main/
   ```
 - [ ] 2.4. Create WAL archive directory:
   ```bash
-  mkdir -p /var/lib/postgresql/18/wal_archive
-  chown postgres:postgres /var/lib/postgresql/18/wal_archive
+  mkdir -p /var/lib/postgresql/16/wal_archive
+  chown postgres:postgres /var/lib/postgresql/16/wal_archive
   ```
-- [ ] 2.5. Start PostgreSQL: `systemctl systemctl start postgresql-18`
+- [ ] 2.5. Start PostgreSQL: `systemctl start postgresql-16`
 - [ ] 2.6. Create replication user:
   ```bash
   sudo -u postgres psql <<EOF
@@ -308,12 +308,12 @@ api:
 - [ ] 8.5. Install all packages (PostgreSQL, Kamailio, FreeSWITCH, Keepalived, lsyncd, Go)
 - [ ] 8.6. **PostgreSQL**: Use pg_basebackup from Node 1:
   ```bash
-  systemctl systemctl stop postgresql-18
-  rm -rf /var/lib/postgresql/18/main
+  systemctl stop postgresql-16
+  rm -rf /var/lib/postgresql/16/main
   sudo -u postgres PGPASSWORD='Repl!VoIP#2025$HA' pg_basebackup \
-    -h 172.16.91.101 -U replicator -D /var/lib/postgresql/18/main \
+    -h 172.16.91.101 -U replicator -D /var/lib/postgresql/16/main \
     -Fp -Xs -P -R -S standby_slot_102
-  systemctl systemctl start postgresql-18
+  systemctl start postgresql-16
   # Verify: sudo -u postgres psql -c "SELECT pg_is_in_recovery();" # Should return 't'
   ```
 - [ ] 8.7. Deploy Kamailio config (same as Node 1)
@@ -395,7 +395,7 @@ api:
 [Unit]
 Description=VoIP Admin Service
 Documentation=https://github.com/yourusername/high-cc-pbx
-After=network-online.target postgresql-18.service
+After=network-online.target postgresql-16.service
 Wants=network-online.target
 
 [Service]
@@ -464,7 +464,7 @@ sudo -u postgres psql -x -c "SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_rep
 # scripts/maintenance/check_services.sh
 #!/bin/bash
 echo "=== Service Status ==="
-for svc in postgresql-18 kamailio freeswitch voip-admin keepalived lsyncd; do
+for svc in postgresql-16 kamailio freeswitch voip-admin keepalived lsyncd; do
     systemctl is-active --quiet $svc && echo "✓ $svc" || echo "✗ $svc"
 done
 ```
@@ -475,7 +475,7 @@ done
 
 | Aspect | Your PostgreSQL HA | This VoIP HA |
 |--------|-------------------|--------------|
-| **Database** | PostgreSQL 18 | PostgreSQL 18 |
+| **Database** | PostgreSQL 18 | PostgreSQL 16 |
 | **Services** | Only PostgreSQL | PostgreSQL + Kamailio + FreeSWITCH + voip-admin |
 | **Health Check** | PostgreSQL only | All 4 services |
 | **Rebuild Script** | PostgreSQL only | Stops VoIP services first, then PostgreSQL |
@@ -502,7 +502,7 @@ done
 3. ⚠️ **FreeSWITCH sofia.conf.xml**: Must use node-specific IPs (not VIP)
 4. ⚠️ **VoIP Admin**: Currently skeleton, needs full implementation (Phase 5 in IMPLEMENTATION-PLAN.md)
 5. ⚠️ **Application Versions**: Verify versions match your requirements:
-   - PostgreSQL 18 (Debian 12 default)
+   - PostgreSQL 16 (Debian 12 default)
    - Kamailio 5.8
    - FreeSWITCH 1.10
    - Go 1.23

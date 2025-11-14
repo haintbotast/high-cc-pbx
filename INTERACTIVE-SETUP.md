@@ -89,7 +89,7 @@ Node 2 hostname [voip-node2]: voip-node2
 
 PostgreSQL version [18]: 18
 PostgreSQL port [5432]: 5432
-Node 1 PGDATA path [/var/lib/pgsql/18/data]:
+Node 1 PGDATA path [/var/lib/postgresql/18/main]:
 
 PostgreSQL Passwords:
 Replication password: ***********
@@ -172,8 +172,8 @@ EOF
 The system now correctly uses **PostgreSQL 18** (matching your production setup), not 16.
 
 All generated paths use:
-- `/var/lib/pgsql/18/data` (PGDATA)
-- `/usr/pgsql-18/bin/` (binaries)
+- `/var/lib/postgresql/18/main` (PGDATA)
+- `/usr/lib/postgresql/18/bin/` (binaries)
 - `postgresql-18` (systemd service)
 
 This matches your reference PostgreSQL HA configuration exactly.

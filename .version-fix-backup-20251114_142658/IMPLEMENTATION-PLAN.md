@@ -24,12 +24,12 @@
 - [ ] Create system users: `voip-admin`, `freeswitch`, `kamailio`
 
 ### PostgreSQL Installation
-- [ ] Node 1: Install PostgreSQL 18
+- [ ] Node 1: Install PostgreSQL 16
   ```bash
   apt update
-  apt install -y postgresql-18 postgresql-contrib-18 postgresql-contrib-18
+  apt install -y postgresql-16 postgresql-contrib-16
   ```
-- [ ] Node 2: Install PostgreSQL 18
+- [ ] Node 2: Install PostgreSQL 16
 - [ ] Node 1: Create databases
   ```bash
   sudo -u postgres createdb voip_platform
@@ -40,12 +40,12 @@
   ```
 - [ ] Node 1: Configure `postgresql.conf`
   ```bash
-  cp configs/postgresql/postgresql.conf /etc/postgresql/18/main/
+  cp configs/postgresql/postgresql.conf /etc/postgresql/16/main/
   # Edit: listen_addresses, max_connections=300, shared_buffers=12GB
   ```
 - [ ] Node 1: Configure `pg_hba.conf`
   ```bash
-  cp configs/postgresql/pg_hba.conf /etc/postgresql/18/main/
+  cp configs/postgresql/pg_hba.conf /etc/postgresql/16/main/
   ```
 - [ ] Node 1: Create replication user
   ```sql
@@ -55,9 +55,9 @@
 - [ ] Node 2: Setup as standby
   ```bash
   systemctl stop postgresql
-  rm -rf /var/lib/postgresql/18/main/*
-  pg_basebackup -h 172.16.91.101 -U replicator -D /var/lib/postgresql/18/main -P -R
-  touch /var/lib/postgresql/18/main/standby.signal
+  rm -rf /var/lib/postgresql/16/main/*
+  pg_basebackup -h 172.16.91.101 -U replicator -D /var/lib/postgresql/16/main -P -R
+  touch /var/lib/postgresql/16/main/standby.signal
   systemctl start postgresql
   ```
 - [ ] Verify replication
