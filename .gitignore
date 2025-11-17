@@ -1,0 +1,90 @@
+# ===================================
+# VoIP HA Project - Git Ignore
+# ===================================
+
+# File backup thủ công (không cần - đã có git)
+*.bak
+*.backup
+*.old
+*~
+.*.swp
+.*.swo
+
+# Thư mục backup tự động
+*backup*/
+.version-fix-backup*/
+
+# Config đã generate (chứa password thật)
+generated-configs/
+/tmp/voip-ha-config.env
+
+# Log files
+*.log
+logs/
+*.log.*
+
+# Compiled binaries
+voip-admin/build/
+voip-admin/voipadmind
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go build artifacts
+vendor/
+*.test
+*.out
+go.work
+
+# IDE và editor
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS generated
+.directory
+.Trash-*
+ehthumbs.db
+
+# Database dumps
+*.sql.gz
+*.dump
+
+# SSL/TLS certificates và private keys (nếu có)
+*.key
+*.crt
+*.pem
+*.p12
+!configs/**/*.crt
+!configs/**/*.pem
+
+# Environment files với secrets
+.env
+.env.local
+*.env.production
+
+# Node modules (nếu có frontend sau này)
+node_modules/
+
+# Python (nếu có scripts Python)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
