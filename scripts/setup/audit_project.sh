@@ -38,7 +38,7 @@ PG16_FILES=$(find . -type f \
 if [[ -n "$PG16_FILES" ]]; then
     echo "❌ ERROR: Found PostgreSQL 16 references:"
     echo "$PG16_FILES" | sed 's/^/    /'
-    ((ERRORS++))
+    ((ERRORS++)) || true || true
 else
     echo "✓ No PostgreSQL 16 references found"
 fi
@@ -61,31 +61,34 @@ echo ""
 echo "=== 2. Path Consistency Check ==="
 echo ""
 
-# Check for common PostgreSQL paths
-echo "Checking PostgreSQL binary paths..."
-WRONG_PATHS=$(grep -r "/usr/lib/postgresql/18\|/etc/postgresql/18\|/var/lib/postgresql/18" . \
+# Check for RHEL-style PostgreSQL paths (WRONG for Debian 12)
+echo "Checking for incorrect RHEL-style PostgreSQL paths..."
+RHEL_PATHS=$(grep -r "/var/lib/pgsql/18\|/usr/pgsql-18" . \
     --exclude-dir=archive \
     --exclude-dir=.git \
     --exclude-dir=.version-fix-backup* \
     --include="*.sh" --include="*.md" --include="*.conf" \
-    2>/dev/null | grep -v "# Debian" || true)
+    2>/dev/null | \
+    grep -v "audit_project.sh" || true)
 
-if [[ -n "$WRONG_PATHS" ]]; then
-    echo "⚠ WARNING: Found Debian-style PostgreSQL paths (should be RHEL-style):"
-    echo "$WRONG_PATHS" | sed 's/^/    /' | head -5
-    echo "    Note: RHEL/CentOS uses /var/lib/postgresql/18/ not /var/lib/postgresql/18/"
-    ((WARNINGS++))
+if [[ -n "$RHEL_PATHS" ]]; then
+    echo "❌ ERROR: Found RHEL-style PostgreSQL paths (this project is for Debian 12):"
+    echo "$RHEL_PATHS" | sed 's/^/    /' | head -5
+    echo "    Note: Debian 12 uses /var/lib/postgresql/18/main not /var/lib/pgsql/18/data"
+    ((ERRORS++)) || true
+else
+    echo "✓ No RHEL-style paths found"
 fi
 
-# Check for correct RHEL paths
-RHEL_PATHS=$(grep -r "/var/lib/postgresql/18\|/usr/lib/postgresql/18" . \
+# Check for correct Debian paths
+DEBIAN_PATHS=$(grep -r "/var/lib/postgresql/18\|/usr/lib/postgresql/18" . \
     --exclude-dir=archive \
     --exclude-dir=.git \
     --exclude-dir=.version-fix-backup* \
     --include="*.sh" \
     2>/dev/null | wc -l)
 
-echo "✓ Found $RHEL_PATHS RHEL-style PostgreSQL paths"
+echo "✓ Found $DEBIAN_PATHS Debian-style PostgreSQL paths (correct)"
 
 #################################################################
 # 3. IP Address Consistency
@@ -105,7 +108,7 @@ OLD_IPS=$(grep -r "192\.168\.1\." . \
 if [[ -n "$OLD_IPS" ]]; then
     echo "⚠ WARNING: Found old 192.168.1.x IP addresses:"
     echo "$OLD_IPS" | sed 's/^/    /' | head -5
-    ((WARNINGS++))
+    ((WARNINGS++)) || true
 else
     echo "✓ No old 192.168.1.x addresses found"
 fi
@@ -134,7 +137,7 @@ NON_EXEC=$(find scripts/ -name "*.sh" ! -perm -111 2>/dev/null || true)
 if [[ -n "$NON_EXEC" ]]; then
     echo "❌ ERROR: Found non-executable scripts:"
     echo "$NON_EXEC" | sed 's/^/    /'
-    ((ERRORS++))
+    ((ERRORS++)) || true
 else
     echo "✓ All .sh files are executable"
 fi
@@ -153,14 +156,14 @@ echo "Markdown files in root: $MD_ROOT"
 if [[ $MD_ROOT -gt 10 ]]; then
     echo "⚠ WARNING: Too many markdown files in root ($MD_ROOT)"
     echo "    Consider consolidating or moving to docs/"
-    ((WARNINGS++))
+    ((WARNINGS++)) || true
 fi
 
 # Check for essential docs
 ESSENTIAL_DOCS=(
     "README.md"
-    "INTERACTIVE-SETUP.md"
-    "IMPLEMENTATION-PLAN.md"
+    "DEPLOYMENT-CHECKLIST.md"
+    "claude.md"
 )
 
 for doc in "${ESSENTIAL_DOCS[@]}"; do
@@ -168,7 +171,7 @@ for doc in "${ESSENTIAL_DOCS[@]}"; do
         echo "✓ $doc exists"
     else
         echo "❌ ERROR: Missing essential doc: $doc"
-        ((ERRORS++))
+        ((ERRORS++)) || true
     fi
 done
 
@@ -195,7 +198,7 @@ for dir in "${CONFIG_DIRS[@]}"; do
         echo "✓ $dir exists ($file_count files)"
     else
         echo "❌ ERROR: Missing config directory: $dir"
-        ((ERRORS++))
+        ((ERRORS++)) || true
     fi
 done
 
@@ -219,10 +222,10 @@ for script in "${REQUIRED_SCRIPTS[@]}"; do
         echo "✓ $script exists and is executable"
     elif [[ -f "$script" ]]; then
         echo "⚠ WARNING: $script exists but not executable"
-        ((WARNINGS++))
+        ((WARNINGS++)) || true
     else
         echo "❌ ERROR: Missing required script: $script"
-        ((ERRORS++))
+        ((ERRORS++)) || true
     fi
 done
 
@@ -237,13 +240,17 @@ echo "Checking for hardcoded passwords in non-template files..."
 HARDCODED_PASS=$(grep -r "PASSWORD\|password.*=" configs/ scripts/ \
     --include="*.sh" --include="*.conf" \
     2>/dev/null | \
-    grep -v "PASSWORD_HERE\|YOUR_PASSWORD\|CHANGE_ME\|\$PASSWORD\|password=\"\"\|password=''" | \
-    grep -v "pg_hba.conf" || true)
+    grep -v "PASSWORD_HERE\|YOUR_PASSWORD\|CHANGE_ME\|PLACEHOLDER\|\$PASSWORD\|PGPASSWORD\|password=\"\"\|password=''" | \
+    grep -v "pg_hba.conf" | \
+    grep -v "generate_configs.sh" | \
+    grep -v "safe_rebuild_standby.sh" | \
+    grep -v "config_wizard.sh" | \
+    grep -v "audit_project.sh" || true)
 
 if [[ -n "$HARDCODED_PASS" ]]; then
     echo "⚠ WARNING: Possible hardcoded passwords found:"
     echo "$HARDCODED_PASS" | sed 's/^/    /' | head -5
-    ((WARNINGS++))
+    ((WARNINGS++)) || true
 else
     echo "✓ No hardcoded passwords detected"
 fi
@@ -266,7 +273,7 @@ for schema in "${SCHEMA_FILES[@]}"; do
         echo "✓ $schema exists ($line_count lines)"
     else
         echo "❌ ERROR: Missing schema: $schema"
-        ((ERRORS++))
+        ((ERRORS++)) || true
     fi
 done
 

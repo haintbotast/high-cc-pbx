@@ -2,18 +2,19 @@
 #################################################################
 # Safe Rebuild Standby - Production Ready for VoIP System
 # File: /usr/local/bin/safe_rebuild_standby.sh
-# PostgreSQL 16 on Debian 12
+# PostgreSQL 18 on Debian 12
 # Version: 3.0 - Adapted for VoIP HA system
 #################################################################
 
 set -e
 
 MASTER_IP="${1}"
-PG_VERSION="16"
+PG_VERSION="18"
 PGDATA="/var/lib/postgresql/${PG_VERSION}/main"
 BACKUP_DIR="/opt/pgsql/backups"
 LOG_FILE="/var/log/rebuild_standby.log"
-REPL_PASSWORD="Repl!VoIP#2025\$HA"
+# TEMPLATE: This will be replaced by generate_configs.sh
+REPL_PASSWORD="REPL_PASSWORD_PLACEHOLDER"
 
 #################################################################
 # Logging functions
