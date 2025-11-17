@@ -20,16 +20,16 @@ These configuration files should be deployed to `/etc/freeswitch/` on each node:
 ### sofia.conf.xml
 Update IP addresses for each node:
 
-**Node 1 (192.168.1.101)**:
+**Node 1 (172.16.91.101)**:
 ```xml
-<param name="sip-ip" value="192.168.1.101"/>
-<param name="rtp-ip" value="192.168.1.101"/>
+<param name="sip-ip" value="172.16.91.101"/>
+<param name="rtp-ip" value="172.16.91.101"/>
 ```
 
-**Node 2 (192.168.1.102)**:
+**Node 2 (172.16.91.102)**:
 ```xml
-<param name="sip-ip" value="192.168.1.102"/>
-<param name="rtp-ip" value="192.168.1.102"/>
+<param name="sip-ip" value="172.16.91.102"/>
+<param name="rtp-ip" value="172.16.91.102"/>
 ```
 
 ### xml_curl.conf.xml

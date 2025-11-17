@@ -40,9 +40,9 @@ See [Architecture Comparison Analysis.md](Architecture Comparison Analysis.md) f
 - **lsyncd**: Real-time Recording Synchronization (FS nodes)
 
 ### Network Architecture
-- Kamailio VIP: `192.168.1.102:5060`
-- PostgreSQL VIP: `192.168.1.101:5432`
-- API Gateway VIP: `192.168.1.110:8080`
+- Kamailio VIP: `172.16.91.100:5060`
+- PostgreSQL VIP: `172.16.91.100:5432`
+- API Gateway VIP: `172.16.91.100:8080`
 
 ## Professional Roles & Expertise Areas
 
@@ -234,7 +234,7 @@ When working on this project, adopt the appropriate professional role based on t
 - Network security best practices
 
 **Key Responsibilities**:
-- Design network topology (192.168.1.0/24)
+- Design network topology (172.16.91.0/24)
 - Configure QoS for RTP traffic
 - Setup firewall rules (SIP, RTP, PostgreSQL)
 - Plan bandwidth requirements (80 Mbps @ 800 CC)
