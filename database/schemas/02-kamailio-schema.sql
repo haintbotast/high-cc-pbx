@@ -1,7 +1,8 @@
 -- =============================================================================
 -- Kamailio Database Schema
 -- Description: PostgreSQL schema for Kamailio SIP proxy
--- Version: Kamailio 5.8.x
+-- Version: Kamailio 6.0.4 (compatible with 6.0.x series)
+-- Note: Schema compatibility preserved from 5.8.x
 -- =============================================================================
 
 -- Create kamailio schema
