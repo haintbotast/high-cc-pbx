@@ -1,50 +1,50 @@
-# High-Availability VoIP System
+# Hệ Thống VoIP Khả Dụng Cao (High-Availability)
 
-**Production-Grade 2-Node VoIP Infrastructure**
+**Hạ Tầng VoIP Production-Grade 2 Node**
 
-- **Capacity**: 600-800 concurrent calls
+- **Công suất**: 600-800 cuộc gọi đồng thời
 - **PostgreSQL**: 18 (streaming replication)
-- **OS**: Debian 12 (bookworm)
-- **Architecture**: Active-Passive with Keepalived
-- **Status**: ✅ Configuration system ready for deployment
+- **Hệ điều hành**: Debian 12 (bookworm)
+- **Kiến trúc**: Active-Passive với Keepalived
+- **Trạng thái**: ✅ Hệ thống cấu hình sẵn sàng triển khai
 
 ---
 
-## Quick Start (3 Steps)
+## Bắt Đầu Nhanh (3 Bước)
 
-### Step 1: Configure Your Environment
+### Bước 1: Cấu Hình Môi Trường
 ```bash
 ./scripts/setup/config_wizard.sh
 ```
-The wizard will ask you for:
-- IP addresses (Node 1, Node 2, VIP)
-- Network interfaces (e.g., ens33, eth0)
-- PostgreSQL passwords
-- Keepalived VRRP settings
-- FreeSWITCH and API credentials
+Wizard sẽ hỏi bạn về:
+- Địa chỉ IP (Node 1, Node 2, VIP)
+- Giao diện mạng (ví dụ: ens33, eth0)
+- Mật khẩu PostgreSQL
+- Cài đặt Keepalived VRRP
+- Thông tin xác thực FreeSWITCH và API
 
-All values are saved securely to `/tmp/voip-ha-config.env`
+Tất cả giá trị được lưu an toàn vào `/tmp/voip-ha-config.env`
 
-### Step 2: Generate Node-Specific Configs
+### Bước 2: Tạo Cấu Hình Cho Từng Node
 ```bash
 ./scripts/setup/generate_configs.sh
 ```
-Creates customized configurations in `generated-configs/`:
-- `node1/` - All configs for Node 1 (with Node 1's IP)
-- `node2/` - All configs for Node 2 (with Node 2's IP)
-- `DEPLOY.md` - Deployment instructions with YOUR specific IPs
+Tạo các cấu hình tùy chỉnh trong thư mục `generated-configs/`:
+- `node1/` - Tất cả cấu hình cho Node 1 (với IP của Node 1)
+- `node2/` - Tất cả cấu hình cho Node 2 (với IP của Node 2)
+- `DEPLOY.md` - Hướng dẫn triển khai với địa chỉ IP CỦA BẠN
 
-### Step 3: Deploy to Nodes
+### Bước 3: Triển Khai Lên Các Node
 ```bash
-# Follow the instructions in generated-configs/DEPLOY.md
-# It contains commands customized with your actual IP addresses
+# Làm theo hướng dẫn trong generated-configs/DEPLOY.md
+# File này chứa các lệnh đã được tùy chỉnh với địa chỉ IP thực tế của bạn
 ```
 
-**That's it!** No manual editing, no hardcoded values, no confusion.
+**Vậy là xong!** Không cần chỉnh sửa thủ công, không có giá trị hardcode, không bị nhầm lẫn.
 
 ---
 
-## Architecture Overview
+## Tổng Quan Kiến Trúc
 
 ```
       VIP: 172.16.91.100
@@ -62,316 +62,316 @@ Node 1 (.101)   Node 2 (.102)
 └── lsyncd          └── lsyncd
 ```
 
-### Key Features
-- **Interactive Configuration**: No hardcoded values - wizard asks for your specific environment
-- **PostgreSQL 18**: Streaming replication with automatic failover detection
-- **Production-Grade Failover**: Based on proven PostgreSQL HA patterns
-  - AH authentication (more secure than PASS)
-  - Split-brain detection and auto-recovery
-  - Health checks verify PostgreSQL role (master/standby), not just process
-  - VoIP service-aware failover (correct stop/start order)
-- **Secure**: Passwords prompted interactively, API keys auto-generated
+### Tính Năng Chính
+- **Cấu Hình Tương Tác**: Không có giá trị hardcode - wizard hỏi về môi trường cụ thể của bạn
+- **PostgreSQL 18**: Streaming replication với phát hiện failover tự động
+- **Failover Chuẩn Production**: Dựa trên các mẫu PostgreSQL HA đã được kiểm chứng
+  - Xác thực AH (an toàn hơn PASS)
+  - Phát hiện split-brain và tự động phục hồi
+  - Health check kiểm tra vai trò PostgreSQL (master/standby), không chỉ process
+  - Failover nhận biết dịch vụ VoIP (thứ tự stop/start đúng)
+- **Bảo Mật**: Mật khẩu nhập tương tác, API key tự động tạo
 
 ---
 
-## Hardware Requirements
+## Yêu Cầu Phần Cứng
 
-Per node (for 600-800 concurrent calls):
+Mỗi node (cho 600-800 cuộc gọi đồng thời):
 - **CPU**: 16 cores
 - **RAM**: 64 GB
-- **Disk**: 500 GB SSD (database) + 3 TB HDD (recordings)
-- **Network**: 1 Gbps
+- **Ổ cứng**: 500 GB SSD (database) + 3 TB HDD (ghi âm)
+- **Mạng**: 1 Gbps
 
-**Total**: 2 nodes = ~$7,000 hardware cost
+**Tổng**: 2 nodes = ~$7,000 chi phí phần cứng
 
 ---
 
-## Software Stack
+## Ngăn Xếp Phần Mềm
 
-| Component | Version | Purpose |
+| Thành Phần | Phiên Bản | Mục Đích |
 |-----------|---------|---------|
-| Debian | 12 (bookworm) | Operating System |
-| PostgreSQL | **18** | Database with streaming replication |
-| Kamailio | 5.8 | SIP proxy and load balancer |
+| Debian | 12 (bookworm) | Hệ điều hành |
+| PostgreSQL | **18** | Database với streaming replication |
+| Kamailio | 5.8 | SIP proxy và load balancer |
 | FreeSWITCH | 1.10 | Media server, IVR, voicemail |
 | Keepalived | Latest | VIP failover (VRRP) |
-| lsyncd | Latest | Recording file synchronization |
-| voip-admin | Custom (Go 1.23) | API gateway, management |
+| lsyncd | Latest | Đồng bộ file ghi âm |
+| voip-admin | Tùy chỉnh (Go 1.23) | API gateway, quản lý |
 
 ---
 
-## Project Structure
+## Cấu Trúc Dự Án
 
 ```
 high-cc-pbx/
-├── README.md                          ⭐ You are here
+├── README.md                          ⭐ Bạn đang ở đây
 │
 ├── scripts/
 │   ├── setup/
-│   │   ├── config_wizard.sh           ⭐ Step 1: Run this first
-│   │   └── generate_configs.sh        ⭐ Step 2: Run this second
+│   │   ├── config_wizard.sh           ⭐ Bước 1: Chạy cái này trước
+│   │   └── generate_configs.sh        ⭐ Bước 2: Chạy cái này sau
 │   ├── monitoring/
-│   │   └── check_voip_master.sh       Production health check
+│   │   └── check_voip_master.sh       Kiểm tra sức khỏe production
 │   └── failover/
-│       ├── keepalived_notify.sh       Unified failover handler
-│       └── safe_rebuild_standby.sh    Auto-rebuild standby
+│       ├── keepalived_notify.sh       Xử lý failover thống nhất
+│       └── safe_rebuild_standby.sh    Tự động rebuild standby
 │
-├── configs/                           Template examples only
-│   ├── postgresql/                    (Use wizard to generate real configs)
+├── configs/                           Chỉ là template mẫu
+│   ├── postgresql/                    (Dùng wizard để tạo config thật)
 │   ├── keepalived/
 │   ├── kamailio/
 │   ├── freeswitch/
 │   ├── lsyncd/
 │   └── voip-admin/
 │
-├── generated-configs/                 ✅ Created by generate_configs.sh
-│   ├── node1/                         Your Node 1 configs (customized)
-│   ├── node2/                         Your Node 2 configs (customized)
-│   └── DEPLOY.md                      Deployment guide (with YOUR IPs)
+├── generated-configs/                 ✅ Được tạo bởi generate_configs.sh
+│   ├── node1/                         Config Node 1 của bạn (đã tùy chỉnh)
+│   ├── node2/                         Config Node 2 của bạn (đã tùy chỉnh)
+│   └── DEPLOY.md                      Hướng dẫn triển khai (với IP CỦA BẠN)
 │
 ├── database/
 │   └── schemas/
-│       ├── 01-voip-schema.sql         VoIP business logic schema
-│       └── 02-kamailio-schema.sql     Kamailio SIP tables
+│       ├── 01-voip-schema.sql         Schema logic nghiệp vụ VoIP
+│       └── 02-kamailio-schema.sql     Bảng SIP của Kamailio
 │
-└── voip-admin/                        Go service code (skeleton)
+└── voip-admin/                        Code Go service (khung sườn)
 ```
 
 ---
 
-## Why Interactive Configuration?
+## Tại Sao Cấu Hình Tương Tác?
 
-### Old Approach (Hardcoded):
-- ❌ IPs hardcoded to 192.168.1.x or 172.16.91.x in git
-- ❌ PostgreSQL version wrong (16 instead of 18)
-- ❌ FreeSWITCH bound to VIP instead of node IP
-- ❌ Passwords as placeholders ("CHANGE_ME")
-- ❌ Manual editing of 20+ files
-- ❌ Easy to miss files or make mistakes
+### Cách Cũ (Hardcode):
+- ❌ IP hardcode thành 192.168.1.x hoặc 172.16.91.x trong git
+- ❌ Phiên bản PostgreSQL sai (16 thay vì 18)
+- ❌ FreeSWITCH bind vào VIP thay vì IP của node
+- ❌ Mật khẩu là placeholder ("CHANGE_ME")
+- ❌ Phải chỉnh sửa thủ công 20+ file
+- ❌ Dễ bỏ sót file hoặc sai sót
 
-### New Approach (Interactive):
-- ✅ Wizard asks for YOUR network (any IP range)
-- ✅ PostgreSQL 18 configured correctly
-- ✅ FreeSWITCH gets node-specific IPs automatically
-- ✅ Passwords prompted securely (no echo)
-- ✅ API keys auto-generated
-- ✅ Node-specific configs created automatically
-- ✅ Zero manual editing needed
+### Cách Mới (Tương Tác):
+- ✅ Wizard hỏi về mạng CỦA BẠN (bất kỳ dải IP nào)
+- ✅ PostgreSQL 18 được cấu hình đúng
+- ✅ FreeSWITCH nhận IP riêng của node tự động
+- ✅ Mật khẩu nhập an toàn (không hiển thị)
+- ✅ API key tự động tạo
+- ✅ Config riêng cho từng node tự động tạo
+- ✅ Không cần chỉnh sửa thủ công
 
 ---
 
-## Example: Node-Specific FreeSWITCH Config
+## Ví Dụ: Config FreeSWITCH Riêng Cho Từng Node
 
-The wizard automatically generates **different** sofia.conf.xml for each node:
+Wizard tự động tạo file sofia.conf.xml **KHÁC NHAU** cho mỗi node:
 
-**Node 1** gets:
+**Node 1** nhận:
 ```xml
 <param name="sip-ip" value="172.16.91.101"/>
 <param name="rtp-ip" value="172.16.91.101"/>
 ```
 
-**Node 2** gets:
+**Node 2** nhận:
 ```xml
 <param name="sip-ip" value="172.16.91.102"/>
 <param name="rtp-ip" value="172.16.91.102"/>
 ```
 
-❌ **NOT** the VIP (172.16.91.100) - FreeSWITCH must bind to node IP!
+❌ **KHÔNG PHẢI** VIP (172.16.91.100) - FreeSWITCH phải bind vào IP của node!
 
-This happens automatically based on wizard input. No manual editing.
-
----
-
-## Production-Grade Features
-
-### Based on Your PostgreSQL HA Setup
-
-The failover scripts are modeled after your production PostgreSQL HA configuration:
-
-1. **Health Check** ([check_voip_master.sh](scripts/monitoring/check_voip_master.sh))
-   - Checks PostgreSQL **role** (master vs standby), not just process
-   - Verifies write capability with temp table test
-   - Checks all VoIP services (Kamailio, FreeSWITCH, voip-admin)
-   - Exit code: 0 = healthy master, 1 = unhealthy/standby
-
-2. **Unified Notify Script** ([keepalived_notify.sh](scripts/failover/keepalived_notify.sh))
-   - **MASTER transition**: Promotes PostgreSQL, creates replication slot, starts VoIP services
-   - **BACKUP transition**: Detects split-brain, triggers auto-rebuild
-   - **FAULT state**: Logs diagnostics, sends alerts
-   - VoIP service-aware: correct stop/start order
-
-3. **Safe Rebuild** ([safe_rebuild_standby.sh](scripts/failover/safe_rebuild_standby.sh))
-   - Auto-detects node (101 vs 102)
-   - Validates master accessibility
-   - Stops VoIP services in correct order
-   - Rebuilds standby with pg_basebackup
-   - Auto-fixes missing configuration
-   - Restarts VoIP services in correct order
+Điều này xảy ra tự động dựa trên input từ wizard. Không cần chỉnh sửa thủ công.
 
 ---
 
-## Deployment Workflow
+## Tính Năng Chuẩn Production
 
-### Phase 1: Preparation
-1. Install Debian 12 on both nodes
-2. Set up network (assign IPs, configure interfaces)
-3. Clone this repository
+### Dựa Trên Cấu Hình PostgreSQL HA Của Bạn
 
-### Phase 2: Configuration
+Các script failover được mô phỏng theo cấu hình PostgreSQL HA production của bạn:
+
+1. **Kiểm Tra Sức Khỏe** ([check_voip_master.sh](scripts/monitoring/check_voip_master.sh))
+   - Kiểm tra **vai trò** PostgreSQL (master vs standby), không chỉ process
+   - Xác minh khả năng ghi với temp table test
+   - Kiểm tra tất cả dịch vụ VoIP (Kamailio, FreeSWITCH, voip-admin)
+   - Exit code: 0 = master khỏe mạnh, 1 = không khỏe/standby
+
+2. **Script Notify Thống Nhất** ([keepalived_notify.sh](scripts/failover/keepalived_notify.sh))
+   - **Chuyển sang MASTER**: Promote PostgreSQL, tạo replication slot, start dịch vụ VoIP
+   - **Chuyển sang BACKUP**: Phát hiện split-brain, kích hoạt auto-rebuild
+   - **Trạng thái FAULT**: Ghi log chẩn đoán, gửi cảnh báo
+   - Nhận biết dịch vụ VoIP: thứ tự stop/start đúng
+
+3. **Rebuild An Toàn** ([safe_rebuild_standby.sh](scripts/failover/safe_rebuild_standby.sh))
+   - Tự động phát hiện node (101 vs 102)
+   - Kiểm tra master có thể truy cập
+   - Stop dịch vụ VoIP theo thứ tự đúng
+   - Rebuild standby với pg_basebackup
+   - Tự động sửa cấu hình thiếu
+   - Restart dịch vụ VoIP theo thứ tự đúng
+
+---
+
+## Quy Trình Triển Khai
+
+### Giai Đoạn 1: Chuẩn Bị
+1. Cài đặt Debian 12 trên cả hai node
+2. Thiết lập mạng (gán IP, cấu hình interface)
+3. Clone repository này
+
+### Giai Đoạn 2: Cấu Hình
 ```bash
-# On your deployment machine
+# Trên máy triển khai
 cd high-cc-pbx
 ./scripts/setup/config_wizard.sh
-# Answer questions about your environment
+# Trả lời các câu hỏi về môi trường của bạn
 ```
 
-### Phase 3: Generation
+### Giai Đoạn 3: Tạo Config
 ```bash
 ./scripts/setup/generate_configs.sh
-# Review generated configs in generated-configs/
+# Xem lại config đã tạo trong generated-configs/
 ```
 
-### Phase 4: Deployment
+### Giai Đoạn 4: Triển Khai
 ```bash
-# Follow generated-configs/DEPLOY.md
-# It contains exact commands for your environment like:
+# Làm theo generated-configs/DEPLOY.md
+# Nó chứa các lệnh chính xác cho môi trường của bạn như:
 scp -r generated-configs/node1/* root@172.16.91.101:/tmp/voip-configs/
 scp -r generated-configs/node2/* root@172.16.91.102:/tmp/voip-configs/
 ```
 
-### Phase 5: Database Setup
+### Giai Đoạn 5: Thiết Lập Database
 ```bash
-# On Node 1 (master)
+# Trên Node 1 (master)
 psql -h 172.16.91.100 -U postgres -f database/schemas/01-voip-schema.sql
 psql -h 172.16.91.100 -U postgres -f database/schemas/02-kamailio-schema.sql
 ```
 
-### Phase 6: Service Start
+### Giai Đoạn 6: Khởi Động Dịch Vụ
 ```bash
-# On both nodes
+# Trên cả hai node
 systemctl enable postgresql-18 kamailio freeswitch voip-admin keepalived lsyncd
 systemctl start postgresql-18 kamailio freeswitch voip-admin lsyncd
 
-# Start keepalived last (after all services are healthy)
+# Start keepalived cuối cùng (sau khi tất cả dịch vụ đã khỏe)
 systemctl start keepalived
 ```
 
-### Phase 7: Testing
+### Giai Đoạn 7: Kiểm Tra
 ```bash
-# Verify VIP
+# Xác minh VIP
 ip addr | grep 172.16.91.100
 
-# Check PostgreSQL role
+# Kiểm tra vai trò PostgreSQL
 sudo -u postgres psql -c "SELECT pg_is_in_recovery();"
 
 # Test health check
 /usr/local/bin/check_voip_master.sh
-echo $?  # Should be 0 on master
+echo $?  # Phải là 0 trên master
 
 # Test failover
-# On master node:
+# Trên node master:
 systemctl stop keepalived
-# Watch logs on backup node - should promote automatically
+# Xem log trên node backup - sẽ tự động promote
 ```
 
 ---
 
-## Security
+## Bảo Mật
 
-### Passwords
-- ✅ Prompted interactively (no echo)
-- ✅ Confirmed before acceptance
-- ✅ Saved to `/tmp/voip-ha-config.env` with chmod 600
-- ✅ Never committed to git
+### Mật Khẩu
+- ✅ Nhập tương tác (không hiển thị)
+- ✅ Xác nhận trước khi chấp nhận
+- ✅ Lưu vào `/tmp/voip-ha-config.env` với chmod 600
+- ✅ Không bao giờ commit vào git
 
 ### API Keys
-- ✅ Auto-generated using `openssl rand -base64 32`
-- ✅ Unique per deployment
-- ✅ Embedded in generated configs
+- ✅ Tự động tạo bằng `openssl rand -base64 32`
+- ✅ Duy nhất cho mỗi lần triển khai
+- ✅ Nhúng trong config đã tạo
 
-### Post-Deployment Cleanup
+### Dọn Dẹp Sau Triển Khai
 ```bash
-# After deployment is complete
+# Sau khi triển khai xong
 rm -rf /tmp/voip-ha-config.env
 rm -rf generated-configs/
-# Configs are now on servers, no need for local copies
+# Config đã ở trên server, không cần bản local
 ```
 
 ---
 
-## Troubleshooting
+## Xử Lý Sự Cố
 
-### "Configuration file not found"
+### "Không tìm thấy file cấu hình"
 ```bash
 $ ./scripts/setup/generate_configs.sh
 ERROR: Configuration file not found: /tmp/voip-ha-config.env
 ```
-**Solution**: Run `./scripts/setup/config_wizard.sh` first
+**Giải pháp**: Chạy `./scripts/setup/config_wizard.sh` trước
 
-### "VIP not failing over"
-Check:
-1. Keepalived running on both nodes: `systemctl status keepalived`
-2. VRRP packets not blocked: `tcpdump -i ens33 vrrp`
-3. Health check script working: `/usr/local/bin/check_voip_master.sh`
-4. Check logs: `tail -f /var/log/keepalived_voip_check.log`
+### "VIP không chuyển"
+Kiểm tra:
+1. Keepalived chạy trên cả hai node: `systemctl status keepalived`
+2. Gói VRRP không bị chặn: `tcpdump -i ens33 vrrp`
+3. Script health check hoạt động: `/usr/local/bin/check_voip_master.sh`
+4. Xem log: `tail -f /var/log/keepalived_voip_check.log`
 
-### "PostgreSQL not promoting"
-Check:
-1. Notify script executed: `grep keepalived_notify /var/log/syslog`
-2. PostgreSQL role: `sudo -u postgres psql -c "SELECT pg_is_in_recovery();"`
-3. Replication status: `sudo -u postgres psql -x -c "SELECT * FROM pg_stat_replication;"`
+### "PostgreSQL không promote"
+Kiểm tra:
+1. Script notify đã chạy: `grep keepalived_notify /var/log/syslog`
+2. Vai trò PostgreSQL: `sudo -u postgres psql -c "SELECT pg_is_in_recovery();"`
+3. Trạng thái replication: `sudo -u postgres psql -x -c "SELECT * FROM pg_stat_replication;"`
 
-### "Split-brain detected"
-The system auto-recovers:
-1. Backup node detects it's standby but PostgreSQL is master
-2. Triggers `safe_rebuild_standby.sh` automatically
-3. Check logs: `tail -f /var/log/rebuild_standby.log`
+### "Phát hiện split-brain"
+Hệ thống tự phục hồi:
+1. Node backup phát hiện nó là standby nhưng PostgreSQL là master
+2. Kích hoạt `safe_rebuild_standby.sh` tự động
+3. Xem log: `tail -f /var/log/rebuild_standby.log`
 
 ---
 
-## Performance Targets
+## Mục Tiêu Hiệu Năng
 
-| Metric | Target | Measurement |
+| Chỉ Số | Mục Tiêu | Đo Lường |
 |--------|--------|-------------|
-| Concurrent Calls | 600-800 | Active call count |
-| Call Setup Latency | <200ms | SIP INVITE → 200 OK |
-| Registration | <50ms | REGISTER → 200 OK |
-| CDR Processing | <30s | Async queue |
-| Failover RTO | <45s | Master down → VIP moved |
+| Cuộc gọi đồng thời | 600-800 | Số cuộc gọi active |
+| Độ trễ thiết lập cuộc gọi | <200ms | SIP INVITE → 200 OK |
+| Đăng ký | <50ms | REGISTER → 200 OK |
+| Xử lý CDR | <30s | Hàng đợi async |
+| RTO Failover | <45s | Master down → VIP chuyển |
 
 ---
 
-## Next Steps
+## Các Bước Tiếp Theo
 
-1. **Configure**: Run [config_wizard.sh](scripts/setup/config_wizard.sh)
-2. **Generate**: Run [generate_configs.sh](scripts/setup/generate_configs.sh)
-3. **Deploy**: Follow `generated-configs/DEPLOY.md`
-4. **Test**: Verify health checks and failover
-5. **Monitor**: Set up Prometheus/Grafana (optional)
-
----
-
-## Documentation
-
-This README is your single source of truth. Everything you need to know is here.
-
-### Additional Resources (Optional):
-- [claude.md](claude.md) - AI assistant context (professional roles)
-- `archive/analysis/` - Old design documents (reference only)
-- `configs/` - Template examples (don't edit - use wizard instead)
+1. **Cấu hình**: Chạy [config_wizard.sh](scripts/setup/config_wizard.sh)
+2. **Tạo config**: Chạy [generate_configs.sh](scripts/setup/generate_configs.sh)
+3. **Triển khai**: Làm theo `generated-configs/DEPLOY.md`
+4. **Kiểm tra**: Xác minh health check và failover
+5. **Giám sát**: Thiết lập Prometheus/Grafana (tùy chọn)
 
 ---
 
-## Support
+## Tài Liệu
 
-- **Configuration issues**: Check wizard prompts, verify `/tmp/voip-ha-config.env`
-- **Deployment issues**: Follow `generated-configs/DEPLOY.md` exactly
-- **Failover issues**: Check logs in `/var/log/keepalived_voip_check.log`
-- **PostgreSQL issues**: Check `/var/log/postgresql/postgresql-18-main.log`
+README này là nguồn sự thật duy nhất. Mọi thứ bạn cần biết đều ở đây.
+
+### Tài Nguyên Bổ Sung (Tùy Chọn):
+- [claude.md](claude.md) - Context cho AI assistant (các vai trò chuyên môn)
+- `archive/analysis/` - Tài liệu thiết kế cũ (chỉ tham khảo)
+- `configs/` - Template mẫu (đừng chỉnh sửa - dùng wizard thay vì)
 
 ---
 
-**Version**: 3.0 (Interactive Configuration System)
-**Status**: ✅ Ready for Production Deployment
-**Last Updated**: 2025-11-14
-**PostgreSQL Version**: 18 (Debian 12)
+## Hỗ Trợ
+
+- **Vấn đề cấu hình**: Kiểm tra câu hỏi wizard, xác minh `/tmp/voip-ha-config.env`
+- **Vấn đề triển khai**: Làm theo `generated-configs/DEPLOY.md` chính xác
+- **Vấn đề failover**: Xem log trong `/var/log/keepalived_voip_check.log`
+- **Vấn đề PostgreSQL**: Xem `/var/log/postgresql/postgresql-18-main.log`
+
+---
+
+**Phiên bản**: 3.0 (Hệ Thống Cấu Hình Tương Tác)
+**Trạng thái**: ✅ Sẵn Sàng Triển Khai Production
+**Cập nhật lần cuối**: 2025-11-14
+**Phiên bản PostgreSQL**: 18 (Debian 12)
