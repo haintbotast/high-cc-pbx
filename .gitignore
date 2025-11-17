@@ -88,3 +88,6 @@ ENV/
 *.tgz
 *.rar
 *.7z
+
+# Session notes (internal development)
+.session-notes/
