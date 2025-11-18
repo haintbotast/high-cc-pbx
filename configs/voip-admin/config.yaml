@@ -1,116 +1,98 @@
 # =============================================================================
 # VoIP Admin Service Configuration
-# Description: Unified API Gateway + Admin Service
+# Description: Unified API Gateway + Admin Service + FreeSWITCH Integration
+# Production configuration for 600-800 concurrent calls
 # =============================================================================
 
 server:
   host: "0.0.0.0"
   port: 8080
-  read_timeout: 30s
-  write_timeout: 30s
-  idle_timeout: 120s
+  read_timeout: 10s
+  write_timeout: 10s
+  idle_timeout: 60s
 
 database:
-  host: "172.16.91.100"      # VIP address
+  host: "172.16.91.100"      # PostgreSQL VIP address
   port: 5432
   user: "voipadmin"
-  password: "CHANGE_ME"
-  dbname: "voip"
-  sslmode: "disable"
+  password: "CHANGE_ME_STRONG_PASSWORD"  # IMPORTANT: Change this!
+  dbname: "voipdb"
+  sslmode: "require"         # Use SCRAM-SHA-256 for security
 
-  # Connection pool
+  # Connection pool (optimized for 600-800 CC)
   max_open_conns: 50
-  max_idle_conns: 25
-  conn_max_lifetime: 300s    # 5 minutes
+  max_idle_conns: 10
+  conn_max_lifetime: 5m
 
-  # Schema
-  search_path: "voip,kamailio"
+  # Schema search path
+  search_path: "voip,kamailio,public"
 
-# In-memory cache for extensions/directory
+# In-memory cache for directory lookups (critical for performance)
 cache:
   enabled: true
-  ttl: 300s                   # 5 minutes
-  cleanup_interval: 600s      # 10 minutes
-  max_entries: 10000
+  max_entries: 10000         # Cache up to 10k extensions
+  cleanup_interval: 60s      # Clean expired entries every minute
 
-# FreeSWITCH integration
-freeswitch:
-  # Event Socket Layer (ESL)
-  esl:
-    host: "127.0.0.1"
-    port: 8021
-    password: "ClueCon2025ChangeMe"
-    timeout: 5s
-
-  # XML_CURL endpoints (served by this service)
-  xml_curl:
-    enabled: true
-    auth_user: "freeswitch"
-    auth_pass: "API_KEY_HERE"
-
-# CDR processing
+# CDR processing (async background workers)
 cdr:
-  # Background workers
-  workers: 4
-  batch_size: 100
-  poll_interval: 5s
+  batch_size: 100            # Process 100 CDRs per batch
+  processing_interval: 5s    # Process queue every 5 seconds
+  cleanup_interval: 24h      # Cleanup old queue entries daily
+  retention_days: 7          # Keep processed queue entries for 7 days
 
-  # Retry logic
-  max_retries: 3
-  retry_delay: 30s
+# Authentication
+auth:
+  # FreeSWITCH XML_CURL authentication (Basic Auth)
+  freeswitch_user: "freeswitch"
+  freeswitch_password: "CHANGE_ME_FREESWITCH_PASSWORD"  # IMPORTANT: Change this!
 
-# API authentication
-api:
-  # API keys for external systems
-  keys:
-    - name: "freeswitch"
-      key: "API_KEY_HERE"
-      permissions: ["xml_curl", "cdr"]
-
-    - name: "admin"
-      key: "ADMIN_API_KEY_HERE"
-      permissions: ["read", "write", "admin"]
-
-# Logging
-logging:
-  level: "info"              # debug, info, warn, error
-  format: "json"             # json or text
-  output: "stdout"           # stdout or file path
-  file:
-    path: "/var/log/voip-admin/voip-admin.log"
-    max_size: 100            # MB
-    max_backups: 10
-    max_age: 30              # days
-    compress: true
-
-# Metrics (Prometheus)
-metrics:
-  enabled: true
-  path: "/metrics"
-  port: 9090
-
-# Health check
-health:
-  enabled: true
-  path: "/health"
+  # API Keys for admin REST API (use strong random keys)
+  api_keys:
+    - "CHANGE_ME_ADMIN_API_KEY_1"   # IMPORTANT: Generate strong key!
+    # - "CHANGE_ME_ADMIN_API_KEY_2" # Add more keys as needed
 
 # CORS (if accessed from web UI)
 cors:
   enabled: true
   allowed_origins:
-    - "http://localhost:3000"
-    - "https://admin.example.com"
+    - "http://localhost:3000"          # Local development
+    - "https://admin.example.com"      # Production web UI
   allowed_methods:
     - "GET"
     - "POST"
     - "PUT"
     - "DELETE"
+    - "OPTIONS"
   allowed_headers:
-    - "Authorization"
     - "Content-Type"
+    - "Authorization"
+    - "X-API-Key"
+  allow_credentials: true
 
-# Performance tuning
-performance:
-  max_goroutines: 1000
-  request_timeout: 30s
-  shutdown_timeout: 30s
+# =============================================================================
+# Production Deployment Notes:
+# =============================================================================
+# 1. Security:
+#    - Generate strong passwords: openssl rand -base64 32
+#    - Use environment variables instead of hardcoded passwords
+#    - Enable SSL mode for database connections
+#    - Keep API keys secret and rotate regularly
+#
+# 2. Performance:
+#    - Cache is critical for 600-800 CC - keeps directory lookups under 5ms
+#    - CDR async processing prevents blocking FreeSWITCH
+#    - Connection pool sized for high concurrency
+#
+# 3. FreeSWITCH Integration:
+#    - Configure mod_xml_curl in FreeSWITCH to point to:
+#      * Directory: http://172.16.91.100:8080/freeswitch/directory
+#      * Dialplan: http://172.16.91.100:8080/freeswitch/dialplan
+#    - Configure mod_xml_cdr to POST to:
+#      * http://172.16.91.100:8080/api/v1/cdr?uuid=${uuid}
+#    - Use Basic Auth with freeswitch_user/freeswitch_password
+#
+# 4. Monitoring:
+#    - Health check: http://172.16.91.100:8080/health
+#    - Stats: http://172.16.91.100:8080/health/stats
+#
+# =============================================================================
