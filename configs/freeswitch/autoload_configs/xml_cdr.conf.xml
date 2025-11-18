@@ -1,0 +1,30 @@
+<configuration name="xml_cdr.conf" description="XML CDR Configuration">
+  <settings>
+    <!-- CDR POST to VoIP Admin Service -->
+    <param name="url" value="http://172.16.91.100:8080/api/v1/cdr?uuid=${uuid}"/>
+
+    <!-- Basic Authentication (freeswitch user) -->
+    <param name="cred" value="freeswitch:CHANGE_THIS_PASSWORD"/>
+
+    <!-- Connection Settings -->
+    <param name="timeout" value="5000"/>          <!-- 5 seconds timeout -->
+    <param name="retries" value="2"/>             <!-- Retry 2 times on failure -->
+    <param name="delay" value="1000"/>            <!-- 1 second delay between retries -->
+
+    <!-- CDR Encoding -->
+    <param name="encode" value="true"/>           <!-- URL-encode the POST data -->
+
+    <!-- CDR Logging Settings -->
+    <param name="log-b-leg" value="false"/>       <!-- Don't log B-leg separately -->
+    <param name="prefix-a-leg" value="false"/>    <!-- Don't prefix A-leg -->
+
+    <!-- Error Logging -->
+    <param name="err-log-dir" value="/var/log/freeswitch"/>
+
+    <!-- Disable CDR if POST fails (don't block call processing) -->
+    <param name="disable-on-error" value="false"/>
+
+    <!-- Enable CDR for all calls -->
+    <param name="enable-cdr" value="true"/>
+  </settings>
+</configuration>
