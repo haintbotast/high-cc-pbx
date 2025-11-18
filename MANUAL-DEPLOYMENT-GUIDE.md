@@ -694,7 +694,7 @@ sudo ufw allow from 172.16.91.101 to any port 5432 proto tcp comment 'PostgreSQL
 sudo ufw allow from 172.16.91.102 to any port 5432 proto tcp comment 'PostgreSQL from Node2'
 
 # Keepalived VRRP
-sudo ufw allow from 172.16.91.0/24 proto 112 comment 'Keepalived VRRP'
+sudo ufw allow from 172.16.91.0/24 proto vrrp comment 'Keepalived VRRP'
 
 # RTPEngine (nếu sử dụng)
 sudo ufw allow from 172.16.91.0/24 to any port 2223 proto udp comment 'RTPEngine control'
