@@ -1168,7 +1168,8 @@ sudo -u postgres bash -c "cat > ~/.pgpass <<EOF
 172.16.91.101:5432:replication:replicator:ACTUAL_REPLICATION_PASSWORD
 EOF"
 
-sudo -u postgres chmod 600 ~/.pgpass
+# QUAN TRỌNG: Phải dùng bash -c để expand ~ đúng
+sudo -u postgres bash -c "chmod 600 ~/.pgpass"
 
 # Thực hiện base backup
 sudo -u postgres pg_basebackup \
@@ -1184,8 +1185,25 @@ sudo -u postgres pg_basebackup \
 
 # -R: Tự động tạo standby.signal và postgresql.auto.conf
 # -X stream: Stream WAL trong khi backup
-# -C: Create replication slot
+# -C: Create replication slot (nếu slot chưa tồn tại)
 # -S: Slot name
+```
+
+**Lưu ý:** Nếu gặp lỗi `ERROR: replication slot "node2_slot" already exists`:
+```bash
+# Option 1: Xóa slot cũ trên Node 1 (RECOMMENDED)
+sudo -u postgres psql -c "SELECT pg_drop_replication_slot('node2_slot');"
+
+# Sau đó chạy lại pg_basebackup ở trên
+
+# Option 2: Hoặc bỏ flag -C nếu slot đã tồn tại
+sudo -u postgres pg_basebackup \
+    -h 172.16.91.101 \
+    -D /var/lib/postgresql/18/main \
+    -U replicator \
+    -P -v -R -X stream \
+    -S node2_slot
+# (Lưu ý: không có -C)
 ```
 
 **Quá trình này sẽ mất vài phút. Output:**
