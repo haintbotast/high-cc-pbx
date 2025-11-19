@@ -70,12 +70,19 @@
 
 ### 1.2 Luồng Dữ Liệu
 
+**QUAN TRỌNG - Kiến Trúc Kết Nối Database:**
+- **Mỗi node kết nối đến PostgreSQL LOCAL của chính nó**
+- Node 1: Kamailio + FreeSWITCH + VoIP Admin → PostgreSQL **172.16.91.101**
+- Node 2: Kamailio + FreeSWITCH + VoIP Admin → PostgreSQL **172.16.91.102**
+- PostgreSQL streaming replication đồng bộ dữ liệu giữa 2 nodes
+- **VIP (172.16.91.100) CHỈ dùng cho SIP traffic, KHÔNG dùng cho database!**
+
 **SIP Registration Flow:**
 ```
 SIP Phone → VIP (172.16.91.100:5060)
           → Keepalived routes to MASTER Node1
           → Kamailio (Node1)
-          → Query PostgreSQL (Node1) via view kamailio.subscriber
+          → Query LOCAL PostgreSQL (172.16.91.101) via view kamailio.subscriber
           → HA1 authentication
           → 200 OK with Contact binding saved
 ```
@@ -937,26 +944,36 @@ Thay thế nội dung bằng:
 
 ```
 # PostgreSQL Client Authentication Configuration
+# ARCHITECTURE: Each node connects to its LOCAL PostgreSQL only
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 
 # Local connections
 local   all             postgres                                peer
-local   all             all                                     scram-sha-256
-
-# IPv4 local connections
-host    all             all             127.0.0.1/32            scram-sha-256
+local   all             all                                     peer
 
 # Replication connections (giữa 2 nodes)
 host    replication     replicator      172.16.91.101/32        scram-sha-256
 host    replication     replicator      172.16.91.102/32        scram-sha-256
 
-# VoIP database access từ local network
-host    voipdb          kamailio        172.16.91.0/24          scram-sha-256
-host    voipdb          voip_admin      172.16.91.0/24          scram-sha-256
-host    voipdb          freeswitch      172.16.91.0/24          scram-sha-256
+# Kamailio connections - MD5 cho performance
+# Applications connect to LOCAL PostgreSQL only
+host    kamailio        kamailio        127.0.0.1/32            md5
+host    kamailio        kamailio        172.16.91.101/32        md5
+host    kamailio        kamailio        172.16.91.102/32        md5
 
-# PostgreSQL internal network
-host    all             all             172.16.91.0/24          scram-sha-256
+# VoIP Admin - SCRAM-SHA-256
+host    voip            voipadmin       127.0.0.1/32            scram-sha-256
+host    voip            voipadmin       172.16.91.101/32        scram-sha-256
+host    voip            voipadmin       172.16.91.102/32        scram-sha-256
+
+# FreeSWITCH ODBC - MD5
+host    voip            freeswitch      127.0.0.1/32            md5
+host    voip            freeswitch      172.16.91.101/32        md5
+host    voip            freeswitch      172.16.91.102/32        md5
+
+# Localhost (for monitoring, admin)
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
 
 # Deny all other
 host    all             all             0.0.0.0/0               reject
@@ -1332,8 +1349,29 @@ sudo cp configs/kamailio/kamailio.cfg /etc/kamailio/
 
 # Replace PASSWORD trong config
 KAMAILIO_PASS=$(grep kamailio_db_password /root/.voip_credentials | cut -d'=' -f2)
-
 sudo sed -i "s/PASSWORD/$KAMAILIO_PASS/" /etc/kamailio/kamailio.cfg
+```
+
+**QUAN TRỌNG - Customize Database IP per Node:**
+
+**Trên Node 1:**
+```bash
+# Node 1 connects to LOCAL PostgreSQL (172.16.91.101)
+# Config đã đúng sẵn, không cần sửa gì
+```
+
+**Trên Node 2:**
+```bash
+# Node 2 MUST connect to its LOCAL PostgreSQL (172.16.91.102)
+sudo sed -i 's/172.16.91.101/172.16.91.102/g' /etc/kamailio/kamailio.cfg
+```
+
+**Verify config:**
+```bash
+# Check database URL
+grep "DBURL" /etc/kamailio/kamailio.cfg
+# Node 1 should show: 172.16.91.101
+# Node 2 should show: 172.16.91.102
 
 # Verify config syntax
 sudo kamailio -c -f /etc/kamailio/kamailio.cfg
@@ -1652,27 +1690,32 @@ sudo sed -i "s/freeswitch_password: \".*\"/freeswitch_password: \"$FREESWITCH_PA
 sudo sed -i "s/YOUR_SECURE_API_KEY_1/$API_KEY/" /etc/voip-admin/config.yaml
 ```
 
-**Adjust config for each node:**
+**QUAN TRỌNG - Customize Database IP per Node:**
 
-**Node 1:**
+**Trên Node 1:**
 ```bash
-sudo nano /etc/voip-admin/config.yaml
-```
-Verify:
-```yaml
-database:
-  host: "172.16.91.101"  # Local PostgreSQL
+# Node 1 connects to LOCAL PostgreSQL (172.16.91.101)
+# Config đã đúng sẵn (host: "172.16.91.101")
+# Verify:
+grep "host:" /etc/voip-admin/config.yaml | head -2
+# Should show: host: "172.16.91.101"
 ```
 
-**Node 2:**
+**Trên Node 2:**
 ```bash
-sudo nano /etc/voip-admin/config.yaml
+# Node 2 MUST connect to its LOCAL PostgreSQL (172.16.91.102)
+sudo sed -i 's/host: "172.16.91.101"/host: "172.16.91.102"/' /etc/voip-admin/config.yaml
+
+# Verify:
+grep "host:" /etc/voip-admin/config.yaml | head -2
+# Should show: host: "172.16.91.102"
 ```
-Change:
-```yaml
-database:
-  host: "172.16.91.102"  # Local PostgreSQL (standby)
-```
+
+**Lưu ý Kiến Trúc:**
+- Mỗi node kết nối đến LOCAL PostgreSQL của chính nó
+- VoIP Admin trên Node 1 → PostgreSQL **172.16.91.101** (MASTER)
+- VoIP Admin trên Node 2 → PostgreSQL **172.16.91.102** (STANDBY in recovery mode)
+- Replication đồng bộ data tự động giữa 2 nodes
 
 ### 10.4 Create systemd Service
 

@@ -12,7 +12,10 @@ server:
   idle_timeout: 60s
 
 database:
-  host: "172.16.91.100"      # PostgreSQL VIP address
+  # IMPORTANT: Use LOCAL PostgreSQL IP per node (NOT VIP!)
+  # Node 1: "172.16.91.101"
+  # Node 2: "172.16.91.102"
+  host: "172.16.91.101"      # Change to 172.16.91.102 on Node 2
   port: 5432
   user: "voipadmin"
   password: "CHANGE_ME_STRONG_PASSWORD"  # IMPORTANT: Change this!
