@@ -86,6 +86,51 @@ ds_next_dst()  # Try next FreeSWITCH on failure
 
 ---
 
+### 4. Parameters: Dialog Tracking
+**Status:** ❌ Removed (changed in 6.0)
+**Impact:** ⚠️ Medium - requires routing logic update
+
+**Removed parameters:**
+```cfg
+modparam("dialog", "dlg_flag", 4)
+modparam("dialog", "timeout_avp", "$avp(dlg_timeout)")
+```
+
+**Removed routing:**
+```cfg
+setflag(4);  # Old way to enable dialog tracking
+```
+
+**Explanation:**
+- Kamailio 6.0 changed dialog tracking from flag-based to function-based
+- `dlg_flag` parameter no longer exists
+- `timeout_avp` replaced by per-dialog functions
+
+**New approach (Kamailio 6.0):**
+```cfg
+# In request_route for INVITE
+dlg_manage();  # Automatically enables dialog tracking
+```
+
+**What still works:**
+```cfg
+# Dialog profiles (line 275-279)
+get_profile_size("concurrent_calls", "$fU")  # Check concurrent calls
+set_dlg_profile("concurrent_calls", "$fU")   # Track user's calls
+
+# Module params
+modparam("dialog", "db_mode", 1)             # DB persistence
+modparam("dialog", "default_timeout", 43200) # 12h timeout
+modparam("dialog", "profiles_with_value", "concurrent_calls")  # Profile tracking
+```
+
+**Benefits:**
+- Simpler API - just call `dlg_manage()`
+- No need to manage flags
+- Automatic dialog lifecycle management
+
+---
+
 ## Remaining Configuration Analysis
 
 ### ✅ Compatible Modules
@@ -204,6 +249,10 @@ sudo kamcmd dispatcher.list
 - 1 module (dialog_ng → merged into dialog.so)
 - 2 DNS parameters (unused, dns=no)
 - 5 dispatcher AVP parameters (replaced by internal handling)
+- 2 dialog parameters (dlg_flag, timeout_avp → use dlg_manage())
+
+**Updated:**
+- Dialog tracking: `setflag(4)` → `dlg_manage()`
 
 **Result:**
 - Cleaner configuration
