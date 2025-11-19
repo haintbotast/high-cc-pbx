@@ -1322,6 +1322,9 @@ sudo -u postgres psql -d voipdb -c "DROP TABLE test_replication;"
 **Trên cả 2 nodes:**
 
 ```bash
+# Install gnupg (required for apt-key)
+sudo apt install -y gnupg
+
 # Add Kamailio repository key
 wget -O- https://deb.kamailio.org/kamailiodebkey.gpg | sudo apt-key add -
 
