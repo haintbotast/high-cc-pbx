@@ -1322,18 +1322,23 @@ sudo -u postgres psql -d voipdb -c "DROP TABLE test_replication;"
 **Trên cả 2 nodes:**
 
 ```bash
-# Install gnupg (required for apt-key)
-sudo apt install -y gnupg
+# Install prerequisites
+sudo apt install -y gnupg curl
 
-# Add Kamailio repository key
-wget -O- https://deb.kamailio.org/kamailiodebkey.gpg | sudo apt-key add -
+# Download and install Kamailio GPG key (modern method)
+curl -fsSL https://deb.kamailio.org/kamailiodebkey.gpg | \
+    sudo gpg --dearmor -o /usr/share/keyrings/kamailio-archive-keyring.gpg
 
-# Add repository
-echo "deb http://deb.kamailio.org/kamailio60 bookworm main" | \
+# Add repository with signed-by
+echo "deb [signed-by=/usr/share/keyrings/kamailio-archive-keyring.gpg] http://deb.kamailio.org/kamailio60 bookworm main" | \
     sudo tee /etc/apt/sources.list.d/kamailio.list
 
 # Update
 sudo apt update
+
+# Verify Kamailio 6.0 is available
+apt-cache policy kamailio | grep -A2 "Candidate"
+# Should show version 6.0.x from deb.kamailio.org
 ```
 
 ### 8.2 Install Kamailio
