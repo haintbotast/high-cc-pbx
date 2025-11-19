@@ -131,6 +131,56 @@ modparam("dialog", "profiles_with_value", "concurrent_calls")  # Profile trackin
 
 ---
 
+### 5. Critical: hash_size MUST Be Power of 2
+**Status:** ⚠️ **CRITICAL BUG** in Kamailio 6.0
+**Impact:** 🔥 **FATAL** - Service fails to start
+
+**Problem:**
+```cfg
+# WRONG - causes infinite loop and out of memory
+modparam("dialog", "hash_size", 14)
+modparam("usrloc", "hash_size", 14)
+```
+
+**Error symptoms:**
+```
+WARNING: dialog [dialog.c:745]: mod_init(): hash_size is not a power of 2 as it should be -> rounding from 14 to 8
+WARNING: dialog [dialog.c:745]: mod_init(): hash_size is not a power of 2 as it should be -> rounding from 8 to 16
+WARNING: dialog [dialog.c:745]: mod_init(): hash_size is not a power of 2 as it should be -> rounding from 16 to 32
+... (infinite loop) ...
+WARNING: dialog [dialog.c:745]: mod_init(): hash_size is not a power of 2 as it should be -> rounding from 268435456 to 536870912
+ERROR: dialog [dlg_hash.c:297]: init_dlg_table(): no more shm mem (1)
+ERROR: dialog [dialog.c:753]: mod_init(): failed to create hash table
+```
+
+**Root cause:**
+- hash_size MUST be power of 2: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384...
+- 14 = 2^3.807... (NOT power of 2!)
+- Kamailio 6.0 has aggressive rounding logic that loops infinitely until out of shared memory
+
+**Fix (for 600-800 concurrent calls):**
+```cfg
+# CORRECT - 4096 = 2^12
+modparam("dialog", "hash_size", 4096)
+modparam("usrloc", "hash_size", 4096)
+```
+
+**Why 4096?**
+- For 800 concurrent calls: 800 / 4096 = ~0.2 calls per bucket (excellent distribution)
+- For ~1000 registered users: 1000 / 4096 = ~0.24 users per bucket (optimal)
+- Memory usage: ~32 KB per hash table (negligible on 64GB RAM system)
+
+**Other valid values:**
+- **2048 (2^11)**: Good for 600-800 CC, uses less memory
+- **8192 (2^13)**: Better distribution, slightly more memory
+- **16384 (2^14)**: Overkill for this scale, wastes memory
+
+**Impact on solution:**
+- 🔴 **CRITICAL**: Without this fix, Kamailio WILL NOT START
+- ✅ After fix: Normal operation, excellent hash distribution
+
+---
+
 ## Remaining Configuration Analysis
 
 ### ✅ Compatible Modules
@@ -253,6 +303,7 @@ sudo kamcmd dispatcher.list
 
 **Updated:**
 - Dialog tracking: `setflag(4)` → `dlg_manage()`
+- **hash_size values: 14 → 4096** (CRITICAL - must be power of 2)
 
 **Result:**
 - Cleaner configuration
