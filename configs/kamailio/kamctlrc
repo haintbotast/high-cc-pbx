@@ -1,0 +1,56 @@
+# =============================================================================
+# Kamailio Control Tool (kamctl) Configuration
+# =============================================================================
+
+# Database engine (postgres, mysql, etc.)
+DBENGINE=POSTGRES
+
+# Database host - MUST USE LOCAL PostgreSQL per node
+# Node 1: 172.16.91.101
+# Node 2: 172.16.91.102
+DBHOST=172.16.91.101
+
+# Database name
+DBNAME=voipdb
+
+# Database user
+DBRWUSER=kamailio
+
+# Database password (CHANGE THIS!)
+DBRWPW="CHANGE_ME_KAMAILIO_PASSWORD"
+
+# Database port
+DBPORT=5432
+
+# Database schema for Kamailio tables
+# IMPORTANT: Kamailio tables are in "kamailio" schema, not "public"
+# This must match search_path in PostgreSQL
+DBSCHEMA=kamailio
+
+# Aliases
+ALIASES_TYPE="DB"
+
+# SIP domain
+SIP_DOMAIN=voip.example.com
+
+# =============================================================================
+# Installation Notes:
+#
+# 1. Copy to server:
+#    sudo cp kamctlrc /etc/kamailio/kamctlrc
+#
+# 2. Customize for each node:
+#    Node 1: DBHOST=172.16.91.101
+#    Node 2: DBHOST=172.16.91.102
+#
+# 3. Set password:
+#    Replace CHANGE_ME_KAMAILIO_PASSWORD with actual password
+#
+# 4. Secure the file:
+#    sudo chmod 600 /etc/kamailio/kamctlrc
+#    sudo chown kamailio:kamailio /etc/kamailio/kamctlrc
+#
+# 5. Test:
+#    kamctl db show
+#    kamctl dispatcher show
+# =============================================================================
