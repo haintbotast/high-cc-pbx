@@ -506,6 +506,9 @@ net.ipv4.conf.default.accept_source_route = 0
 net.ipv4.icmp_echo_ignore_broadcasts = 1
 net.ipv4.icmp_ignore_bogus_error_responses = 1
 
+# Allow binding to non-local IP (for VIP before Keepalived assigns it)
+net.ipv4.ip_nonlocal_bind = 1
+
 # Disable IPv6 (nếu không dùng)
 net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv6.conf.default.disable_ipv6 = 1
@@ -1378,30 +1381,36 @@ KAMAILIO_PASS=$(grep kamailio_db_password /root/.voip_credentials | cut -d'=' -f
 sudo sed -i "s/PASSWORD/$KAMAILIO_PASS/" /etc/kamailio/kamailio.cfg
 ```
 
-**QUAN TRỌNG - Customize Database IP per Node:**
+**QUAN TRỌNG - Customize per Node:**
 
 **Trên Node 1:**
 ```bash
-# Node 1 connects to LOCAL PostgreSQL (172.16.91.101)
-# Config đã đúng sẵn, không cần sửa gì
+# Database: đã đúng sẵn (172.16.91.101)
+# Listen addresses: đã đúng sẵn (VIP + .101)
 ```
 
 **Trên Node 2:**
 ```bash
-# Node 2 MUST connect to its LOCAL PostgreSQL (172.16.91.102)
+# Fix database IP
 sudo sed -i 's/172.16.91.101/172.16.91.102/g' /etc/kamailio/kamailio.cfg
+
+# Fix listen addresses (thay .101 bằng .102, giữ VIP)
+sudo sed -i 's/listen=udp:172.16.91.101/listen=udp:172.16.91.102/' /etc/kamailio/kamailio.cfg
+sudo sed -i 's/listen=tcp:172.16.91.101/listen=tcp:172.16.91.102/' /etc/kamailio/kamailio.cfg
 ```
 
-**Verify config:**
+**Verify:**
 ```bash
 # Check database URL
 grep "DBURL" /etc/kamailio/kamailio.cfg
-# Node 1 should show: 172.16.91.101
-# Node 2 should show: 172.16.91.102
+# Node 1: 172.16.91.101, Node 2: 172.16.91.102
 
-# Verify config syntax
+# Check listen
+grep "^listen=" /etc/kamailio/kamailio.cfg
+# Node 1: VIP + .101, Node 2: VIP + .102
+
+# Test syntax
 sudo kamailio -c -f /etc/kamailio/kamailio.cfg
-# Should show: config file ok, exiting...
 ```
 
 ### 8.4 Populate Kamailio Tables
