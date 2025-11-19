@@ -55,7 +55,7 @@ Node 1 (.101)   Node 2 (.102)
   MASTER          BACKUP
 
 ├── PostgreSQL 18   ├── PostgreSQL 18
-├── Kamailio 5.8    ├── Kamailio 5.8
+├── Kamailio 6.0    ├── Kamailio 6.0
 ├── FreeSWITCH 1.10 ├── FreeSWITCH 1.10
 ├── voip-admin      ├── voip-admin
 ├── Keepalived      ├── Keepalived
@@ -92,7 +92,7 @@ Mỗi node (cho 600-800 cuộc gọi đồng thời):
 |-----------|---------|---------|
 | Debian | 12 (bookworm) | Hệ điều hành |
 | PostgreSQL | **18** | Database với streaming replication |
-| Kamailio | 5.8 | SIP proxy và load balancer |
+| Kamailio | **6.0** | SIP proxy và load balancer |
 | FreeSWITCH | 1.10 | Media server, IVR, voicemail |
 | Keepalived | Latest | VIP failover (VRRP) |
 | lsyncd | Latest | Đồng bộ file ghi âm |
@@ -355,9 +355,15 @@ Hệ thống tự phục hồi:
 
 README này là nguồn sự thật duy nhất. Mọi thứ bạn cần biết đều ở đây.
 
+### Tài Liệu Kỹ Thuật Chi Tiết:
+- [DEPLOYMENT-PREREQUISITES.md](DEPLOYMENT-PREREQUISITES.md) - ⭐ Danh sách đầy đủ thông tin cần chuẩn bị trước khi triển khai
+- [DATABASE-ARCHITECTURE.md](DATABASE-ARCHITECTURE.md) - Giải thích kiến trúc LOCAL database connection
+- [KAMAILIO-6-COMPATIBILITY.md](KAMAILIO-6-COMPATIBILITY.md) - Phân tích tương thích Kamailio 6.0
+- [DEPLOYMENT-CHECKLIST.md](DEPLOYMENT-CHECKLIST.md) - Checklist đánh dấu từng bước triển khai
+- [MANUAL-DEPLOYMENT-GUIDE.md](MANUAL-DEPLOYMENT-GUIDE.md) - Hướng dẫn triển khai thủ công chi tiết
+
 ### Tài Nguyên Bổ Sung (Tùy Chọn):
 - [claude.md](claude.md) - Context cho AI assistant (các vai trò chuyên môn)
-- `archive/analysis/` - Tài liệu thiết kế cũ (chỉ tham khảo)
 - `configs/` - Template mẫu (đừng chỉnh sửa - dùng wizard thay vì)
 
 ---
@@ -371,7 +377,7 @@ README này là nguồn sự thật duy nhất. Mọi thứ bạn cần biết �
 
 ---
 
-**Phiên bản**: 3.0 (Hệ Thống Cấu Hình Tương Tác)
+**Phiên bản**: 3.1 (Kamailio 6.0 Compatible)
 **Trạng thái**: ✅ Sẵn Sàng Triển Khai Production
-**Cập nhật lần cuối**: 2025-11-14
-**Phiên bản PostgreSQL**: 18 (Debian 12)
+**Cập nhật lần cuối**: 2025-01-19
+**Software Stack**: PostgreSQL 18, Kamailio 6.0, FreeSWITCH 1.10 (Debian 12)
