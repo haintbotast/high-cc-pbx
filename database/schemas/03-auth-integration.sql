@@ -93,8 +93,9 @@ COMMENT ON TRIGGER extensions_calc_ha1_trigger ON voip.extensions IS 'Auto-calcu
 -- PART 4: Replace Kamailio subscriber TABLE with VIEW
 -- =============================================================================
 
--- Drop existing subscriber table (backup first if needed!)
--- WARNING: Only run this if kamailio.subscriber table is empty or you have backup
+-- Drop existing subscriber table OR view (idempotent - safe to run multiple times)
+-- Try both VIEW and TABLE to handle any existing state
+DROP VIEW IF EXISTS kamailio.subscriber CASCADE;
 DROP TABLE IF EXISTS kamailio.subscriber CASCADE;
 
 -- Create VIEW for Kamailio authentication
@@ -263,24 +264,20 @@ CREATE TRIGGER subscriber_delete_trigger
 -- PART 6: Update voip.cdr_queue for FreeSWITCH Integration
 -- =============================================================================
 
--- Add columns for async CDR processing
+-- Add columns for async CDR processing (if not already exist from 01-voip-schema.sql)
 ALTER TABLE voip.cdr_queue
-ADD COLUMN IF NOT EXISTS raw_xml TEXT,
-ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending',
-ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+ADD COLUMN IF NOT EXISTS raw_xml TEXT;
 
--- Index for worker efficiency (only pending records)
-CREATE INDEX IF NOT EXISTS idx_cdr_queue_status
-ON voip.cdr_queue(status, created_at)
-WHERE status = 'pending';
+-- Note: status column already created in 01-voip-schema.sql with default 'pending'
+-- Note: idx_cdr_queue_status and idx_cdr_queue_created already exist from 01-voip-schema.sql
 
--- Index for cleanup (processed/failed records)
+-- Add additional index for cleanup (processed/failed records)
 CREATE INDEX IF NOT EXISTS idx_cdr_queue_cleanup
 ON voip.cdr_queue(status, created_at)
-WHERE status IN ('processed', 'failed');
+WHERE status IN ('completed', 'failed');
 
 COMMENT ON COLUMN voip.cdr_queue.raw_xml IS 'Raw XML CDR from FreeSWITCH mod_xml_cdr';
-COMMENT ON COLUMN voip.cdr_queue.status IS 'Processing status: pending, processed, failed';
+COMMENT ON COLUMN voip.cdr_queue.status IS 'Processing status: pending, processing, completed, failed';
 
 -- =============================================================================
 -- PART 7: Sample Data for Testing

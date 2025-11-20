@@ -63,23 +63,8 @@ CREATE INDEX location_connection_id_idx ON location (connection_id);
 -- =============================================================================
 
 -- Subscriber credentials (read from voip.extensions via view)
--- Note: This is a view that joins with voip.extensions
--- See 03-views.sql for the actual view definition
-
-CREATE TABLE subscriber (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(64) DEFAULT '' NOT NULL,
-    domain VARCHAR(190) DEFAULT '' NOT NULL,
-    password VARCHAR(64) DEFAULT '' NOT NULL,
-    email_address VARCHAR(128) DEFAULT '' NOT NULL,
-    ha1 VARCHAR(128) DEFAULT '' NOT NULL,
-    ha1b VARCHAR(128) DEFAULT '' NOT NULL,
-    rpid VARCHAR(128) DEFAULT NULL,
-
-    CONSTRAINT account_idx UNIQUE (username, domain)
-);
-
-CREATE INDEX subscriber_username_idx ON subscriber (username, domain);
+-- Note: The subscriber VIEW is created in 03-auth-integration.sql
+-- No table needed here - view integrates with voip.extensions
 
 -- =============================================================================
 -- DIALOG TRACKING

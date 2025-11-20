@@ -176,7 +176,7 @@ CREATE TABLE voip.recording_policies (
 -- =============================================================================
 
 -- CDR Queue table for async processing
-CREATE TABLE voip.cdr_queue (
+CREATE TABLE IF NOT EXISTS voip.cdr_queue (
     id BIGSERIAL PRIMARY KEY,
     payload JSONB NOT NULL,
     status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'processing', 'completed', 'failed'
@@ -185,8 +185,19 @@ CREATE TABLE voip.cdr_queue (
     processed_at TIMESTAMP
 );
 
-CREATE INDEX idx_cdr_queue_status ON voip.cdr_queue(status) WHERE status = 'pending';
-CREATE INDEX idx_cdr_queue_created ON voip.cdr_queue(created_at) WHERE status = 'pending';
+-- Ensure status column exists (for idempotent scripts)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'voip' AND table_name = 'cdr_queue' AND column_name = 'status'
+    ) THEN
+        ALTER TABLE voip.cdr_queue ADD COLUMN status VARCHAR(20) DEFAULT 'pending';
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_cdr_queue_status ON voip.cdr_queue(status) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_cdr_queue_created ON voip.cdr_queue(created_at) WHERE status = 'pending';
 
 -- =============================================================================
 -- CDR (Call Detail Records)
