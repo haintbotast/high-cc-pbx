@@ -13,11 +13,17 @@ DBHOST=172.16.91.101
 # Database name
 DBNAME=voipdb
 
-# Database user
+# Database read-write user (for INSERT, UPDATE, DELETE)
 DBRWUSER=kamailio
 
-# Database password (CHANGE THIS!)
+# Database read-write password (CHANGE THIS!)
 DBRWPW="CHANGE_ME_KAMAILIO_PASSWORD"
+
+# Database read-only user (for SELECT queries)
+DBROUSER=kamailioro
+
+# Database read-only password (CHANGE THIS!)
+DBROPW="CHANGE_ME_KAMAILIORO_PASSWORD"
 
 # Database port
 DBPORT=5432
