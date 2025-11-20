@@ -3,7 +3,7 @@
 # =============================================================================
 
 # Database engine (postgres, mysql, etc.)
-DBENGINE=POSTGRES
+DBENGINE=postgres
 
 # Database host - MUST USE LOCAL PostgreSQL per node
 # Node 1: 172.16.91.101
