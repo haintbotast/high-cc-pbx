@@ -139,7 +139,8 @@ alias=pbx.company.com
 |---------|---------|-------------|---------|
 | `postgres` (OS user) | PostgreSQL admin | System | Peer auth (không cần password) |
 | `replicator` | Streaming replication | `postgresql.conf`, `pg_hba.conf` | Min 16 chars, SCRAM-SHA-256 |
-| `kamailio` | Kamailio database user | `kamailio.cfg` | Min 16 chars, MD5 |
+| `kamailio` | Kamailio read-write user | `kamailio.cfg`, `kamctlrc` | Min 16 chars, MD5 |
+| `kamailioro` | Kamailio read-only user | `kamctlrc` (for kamctl) | Min 16 chars, MD5 |
 | `voipadmin` | VoIP Admin database user | `config.yaml` | Min 16 chars, SCRAM-SHA-256 |
 | `freeswitch` | FreeSWITCH ODBC user | `odbc.ini` | Min 16 chars, MD5 |
 
