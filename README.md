@@ -31,20 +31,22 @@
 
 ### 🚀 Triển Khai Thủ Công (Production-Ready)
 
-Làm theo **[MANUAL-DEPLOYMENT-GUIDE.md](MANUAL-DEPLOYMENT-GUIDE.md)** - Hướng dẫn từng bước chi tiết cho:
-1. PostgreSQL 18 installation và replication
-2. Kamailio 6.0 setup và configuration
-3. FreeSWITCH installation
-4. VoIP Admin deployment
-5. Keepalived HA configuration
-6. Testing và verification
+Làm theo **[deployment/README.md](deployment/README.md)** - Deployment guides theo từng service:
 
-**Đặc điểm của manual deployment:**
-- ✅ Kiểm soát hoàn toàn từng bước
-- ✅ Hiểu rõ từng component
-- ✅ Troubleshooting dễ dàng
+1. **[PostgreSQL 18](deployment/01-PostgreSQL-Deployment.md)** - Database với streaming replication
+2. **[Kamailio 6.0](deployment/02-Kamailio-Deployment.md)** - SIP proxy và load balancer
+3. **[FreeSWITCH 1.10](deployment/03-FreeSWITCH-Deployment.md)** - Media server, IVR, voicemail
+4. **[VoIP Admin](deployment/04-VoIP-Admin-Deployment.md)** - API gateway và quản lý
+5. **[Keepalived HA](deployment/05-Keepalived-HA-Deployment.md)** - VIP failover và health checks
+
+**Tại sao deployment theo service?**
+- ✅ Dễ theo dõi tiến độ - mỗi service một guide riêng
+- ✅ Có thứ tự dependencies rõ ràng (01 → 02 → 03 → 04 → 05)
+- ✅ Troubleshooting tập trung - mỗi guide có phần riêng
 - ✅ Production-tested configurations
 - ✅ Idempotent scripts (chạy lại an toàn)
+
+**Hoặc**: Làm theo [MANUAL-DEPLOYMENT-GUIDE.md](MANUAL-DEPLOYMENT-GUIDE.md) - Hướng dẫn tổng hợp (monolithic, tất cả trong 1 file)
 
 ---
 
