@@ -1,5 +1,6 @@
 # Kamailio 6.0 Compatibility Analysis
 
+**Updated:** 2025-11-20
 **Created:** 2025-01-19
 **Purpose:** Document deprecated components removed for Kamailio 6.0 compatibility
 
@@ -320,4 +321,4 @@ sudo kamcmd dispatcher.list
 ---
 
 **Document maintained by:** VoIP HA Project
-**Last updated:** 2025-01-19
+**Last updated:** 2025-11-20

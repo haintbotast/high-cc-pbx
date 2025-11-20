@@ -10,37 +10,41 @@
 
 ---
 
-## Bắt Đầu Nhanh (3 Bước)
+## Bắt Đầu Triển Khai
 
-### Bước 1: Cấu Hình Môi Trường
-```bash
-./scripts/setup/config_wizard.sh
-```
-Wizard sẽ hỏi bạn về:
-- Địa chỉ IP (Node 1, Node 2, VIP)
-- Giao diện mạng (ví dụ: ens33, eth0)
-- Mật khẩu PostgreSQL
-- Cài đặt Keepalived VRRP
-- Thông tin xác thực FreeSWITCH và API
+### 📋 Chuẩn Bị Trước Khi Triển Khai
 
-Tất cả giá trị được lưu an toàn vào `/tmp/voip-ha-config.env`
+1. **Đọc Prerequisites** - [DEPLOYMENT-PREREQUISITES.md](DEPLOYMENT-PREREQUISITES.md)
+   - Thông tin network (IPs, VIP, gateway, DNS)
+   - Passwords cho tất cả services
+   - Credentials cho database users
+   - API keys và authentication tokens
 
-### Bước 2: Tạo Cấu Hình Cho Từng Node
-```bash
-./scripts/setup/generate_configs.sh
-```
-Tạo các cấu hình tùy chỉnh trong thư mục `generated-configs/`:
-- `node1/` - Tất cả cấu hình cho Node 1 (với IP của Node 1)
-- `node2/` - Tất cả cấu hình cho Node 2 (với IP của Node 2)
-- `DEPLOY.md` - Hướng dẫn triển khai với địa chỉ IP CỦA BẠN
+2. **Review Architecture** - [DATABASE-ARCHITECTURE.md](DATABASE-ARCHITECTURE.md)
+   - Hiểu chiến lược LOCAL database connection
+   - Tại sao KHÔNG dùng VIP cho database
+   - Replication setup
 
-### Bước 3: Triển Khai Lên Các Node
-```bash
-# Làm theo hướng dẫn trong generated-configs/DEPLOY.md
-# File này chứa các lệnh đã được tùy chỉnh với địa chỉ IP thực tế của bạn
-```
+3. **Kamailio 6.0 Compatibility** - [KAMAILIO-6-COMPATIBILITY.md](KAMAILIO-6-COMPATIBILITY.md)
+   - Breaking changes từ Kamailio 5.x
+   - Required fixes và configurations
 
-**Vậy là xong!** Không cần chỉnh sửa thủ công, không có giá trị hardcode, không bị nhầm lẫn.
+### 🚀 Triển Khai Thủ Công (Production-Ready)
+
+Làm theo **[MANUAL-DEPLOYMENT-GUIDE.md](MANUAL-DEPLOYMENT-GUIDE.md)** - Hướng dẫn từng bước chi tiết cho:
+1. PostgreSQL 18 installation và replication
+2. Kamailio 6.0 setup và configuration
+3. FreeSWITCH installation
+4. VoIP Admin deployment
+5. Keepalived HA configuration
+6. Testing và verification
+
+**Đặc điểm của manual deployment:**
+- ✅ Kiểm soát hoàn toàn từng bước
+- ✅ Hiểu rõ từng component
+- ✅ Troubleshooting dễ dàng
+- ✅ Production-tested configurations
+- ✅ Idempotent scripts (chạy lại an toàn)
 
 ---
 
@@ -63,7 +67,7 @@ Node 1 (.101)   Node 2 (.102)
 ```
 
 ### Tính Năng Chính
-- **Cấu Hình Tương Tác**: Không có giá trị hardcode - wizard hỏi về môi trường cụ thể của bạn
+- **Production-Ready**: Configuration templates đã tested thực tế, manual deployment với hướng dẫn chi tiết
 - **PostgreSQL 18**: Streaming replication với phát hiện failover tự động
 - **Failover Chuẩn Production**: Dựa trên các mẫu PostgreSQL HA đã được kiểm chứng
   - Xác thực AH (an toàn hơn PASS)
@@ -362,22 +366,27 @@ README này là nguồn sự thật duy nhất. Mọi thứ bạn cần biết �
 - [DEPLOYMENT-CHECKLIST.md](DEPLOYMENT-CHECKLIST.md) - Checklist đánh dấu từng bước triển khai
 - [MANUAL-DEPLOYMENT-GUIDE.md](MANUAL-DEPLOYMENT-GUIDE.md) - Hướng dẫn triển khai thủ công chi tiết
 
-### Tài Nguyên Bổ Sung (Tùy Chọn):
+### Tài Nguyên Bổ Sung:
+- [CHANGELOG.md](CHANGELOG.md) - Version history và release notes
 - [claude.md](claude.md) - Context cho AI assistant (các vai trò chuyên môn)
-- `configs/` - Template mẫu (đừng chỉnh sửa - dùng wizard thay vì)
+- `configs/` - Configuration templates (customize theo môi trường của bạn)
+- `database/schemas/` - PostgreSQL schemas (idempotent, an toàn chạy lại)
 
 ---
 
 ## Hỗ Trợ
 
-- **Vấn đề cấu hình**: Kiểm tra câu hỏi wizard, xác minh `/tmp/voip-ha-config.env`
-- **Vấn đề triển khai**: Làm theo `generated-configs/DEPLOY.md` chính xác
-- **Vấn đề failover**: Xem log trong `/var/log/keepalived_voip_check.log`
+- **Vấn đề cấu hình**: Kiểm tra [DEPLOYMENT-PREREQUISITES.md](DEPLOYMENT-PREREQUISITES.md)
+- **Vấn đề triển khai**: Làm theo [MANUAL-DEPLOYMENT-GUIDE.md](MANUAL-DEPLOYMENT-GUIDE.md) từng bước
+- **Vấn đề Kamailio**: Xem `/var/log/kamailio.log` và [KAMAILIO-6-COMPATIBILITY.md](KAMAILIO-6-COMPATIBILITY.md)
+- **Vấn đề failover**: Xem log `/var/log/keepalived_voip_check.log`
 - **Vấn đề PostgreSQL**: Xem `/var/log/postgresql/postgresql-18-main.log`
+- **Database schemas**: Tất cả scripts idempotent - an toàn chạy lại nhiều lần
 
 ---
 
-**Phiên bản**: 3.1 (Kamailio 6.0 Compatible)
-**Trạng thái**: ✅ Sẵn Sàng Triển Khai Production
-**Cập nhật lần cuối**: 2025-01-19
+**Phiên bản**: 3.2.0 (Manual Deployment Ready)
+**Trạng thái**: ✅ Production-Ready, Tested
+**Ngày phát hành**: 2025-11-20
 **Software Stack**: PostgreSQL 18, Kamailio 6.0, FreeSWITCH 1.10 (Debian 12)
+**Changelog**: [CHANGELOG.md](CHANGELOG.md)
