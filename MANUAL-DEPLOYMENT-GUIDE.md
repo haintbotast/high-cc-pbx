@@ -1005,8 +1005,11 @@ psql <<EOF
 -- Replication user
 CREATE USER replicator WITH REPLICATION LOGIN PASSWORD 'CHANGE_REPLICATION_PASSWORD';
 
--- Kamailio user
+-- Kamailio read-write user
 CREATE USER kamailio WITH LOGIN PASSWORD 'CHANGE_KAMAILIO_PASSWORD';
+
+-- Kamailio read-only user (for kamctl read commands)
+CREATE USER kamailioro WITH LOGIN PASSWORD 'CHANGE_KAMAILIORO_PASSWORD';
 
 -- VoIP Admin user
 CREATE USER voip_admin WITH LOGIN PASSWORD 'CHANGE_VOIPADMIN_PASSWORD';
@@ -1036,6 +1039,7 @@ Thêm:
 # PostgreSQL Credentials
 replication_password=ACTUAL_PASSWORD_HERE
 kamailio_db_password=ACTUAL_PASSWORD_HERE
+kamailioro_db_password=ACTUAL_PASSWORD_HERE
 voipadmin_db_password=ACTUAL_PASSWORD_HERE
 freeswitch_db_password=ACTUAL_PASSWORD_HERE
 ```
@@ -1070,14 +1074,19 @@ sudo -u postgres psql -d voipdb -c "\dt kamailio.*"
 
 # Grant permissions
 sudo -u postgres psql -d voipdb <<EOF
--- Kamailio permissions
+-- Kamailio read-write permissions
 GRANT USAGE ON SCHEMA kamailio TO kamailio;
-GRANT SELECT ON ALL TABLES IN SCHEMA kamailio TO kamailio;
-GRANT SELECT ON kamailio.subscriber TO kamailio;
-GRANT ALL ON kamailio.location TO kamailio;
-GRANT ALL ON kamailio.dispatcher TO kamailio;
-GRANT ALL ON kamailio.dialog TO kamailio;
-GRANT ALL ON kamailio.acc TO kamailio;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA kamailio TO kamailio;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA kamailio TO kamailio;
+
+-- Kamailio read-only permissions (for kamctl)
+GRANT USAGE ON SCHEMA kamailio TO kamailioro;
+GRANT SELECT ON ALL TABLES IN SCHEMA kamailio TO kamailioro;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA kamailio TO kamailioro;
+
+-- Set default search_path for Kamailio users (CRITICAL for kamctl)
+ALTER USER kamailio SET search_path TO kamailio, public;
+ALTER USER kamailioro SET search_path TO kamailio, public;
 
 -- VoIP Admin permissions
 GRANT USAGE ON SCHEMA voip TO voip_admin;
@@ -1411,6 +1420,45 @@ grep "^listen=" /etc/kamailio/kamailio.cfg
 
 # Test syntax
 sudo kamailio -c -f /etc/kamailio/kamailio.cfg
+```
+
+**Configure kamctl (Kamailio control tool):**
+
+```bash
+# Copy kamctlrc
+sudo cp configs/kamailio/kamctlrc /etc/kamailio/kamctlrc
+
+# Replace passwords
+KAMAILIO_PASS=$(grep kamailio_db_password /root/.voip_credentials | cut -d'=' -f2)
+KAMAILIORO_PASS=$(grep kamailioro_db_password /root/.voip_credentials | cut -d'=' -f2)
+sudo sed -i "s/CHANGE_ME_KAMAILIO_PASSWORD/$KAMAILIO_PASS/" /etc/kamailio/kamctlrc
+sudo sed -i "s/CHANGE_ME_KAMAILIORO_PASSWORD/$KAMAILIORO_PASS/" /etc/kamailio/kamctlrc
+
+# Customize per node (database host)
+# Node 2 only:
+# sudo sed -i 's/172.16.91.101/172.16.91.102/' /etc/kamailio/kamctlrc
+
+# Secure the file
+sudo chmod 600 /etc/kamailio/kamctlrc
+sudo chown kamailio:kamailio /etc/kamailio/kamctlrc
+
+# Test kamctl
+kamctl dispatcher show
+```
+
+**Configure Kamailio logging (rsyslog):**
+
+```bash
+# Copy rsyslog config
+sudo cp configs/kamailio/kamailio-rsyslog.conf /etc/rsyslog.d/kamailio.conf
+
+# Create log file
+sudo touch /var/log/kamailio.log
+sudo chmod 640 /var/log/kamailio.log
+sudo chown syslog:adm /var/log/kamailio.log
+
+# Restart rsyslog
+sudo systemctl restart rsyslog
 ```
 
 ### 8.4 Populate Kamailio Tables
