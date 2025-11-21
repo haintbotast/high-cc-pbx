@@ -185,14 +185,39 @@ CREATE TABLE IF NOT EXISTS voip.cdr_queue (
     processed_at TIMESTAMP
 );
 
--- Ensure status column exists (for idempotent scripts)
+-- Ensure all columns exist (for idempotent scripts when table already exists)
 DO $$
 BEGIN
+    -- Ensure status column exists
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_schema = 'voip' AND table_name = 'cdr_queue' AND column_name = 'status'
     ) THEN
         ALTER TABLE voip.cdr_queue ADD COLUMN status VARCHAR(20) DEFAULT 'pending';
+    END IF;
+
+    -- Ensure created_at column exists
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'voip' AND table_name = 'cdr_queue' AND column_name = 'created_at'
+    ) THEN
+        ALTER TABLE voip.cdr_queue ADD COLUMN created_at TIMESTAMP DEFAULT NOW();
+    END IF;
+
+    -- Ensure processed_at column exists
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'voip' AND table_name = 'cdr_queue' AND column_name = 'processed_at'
+    ) THEN
+        ALTER TABLE voip.cdr_queue ADD COLUMN processed_at TIMESTAMP;
+    END IF;
+
+    -- Ensure attempts column exists
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'voip' AND table_name = 'cdr_queue' AND column_name = 'attempts'
+    ) THEN
+        ALTER TABLE voip.cdr_queue ADD COLUMN attempts INT DEFAULT 0;
     END IF;
 END $$;
 
@@ -203,7 +228,7 @@ CREATE INDEX IF NOT EXISTS idx_cdr_queue_created ON voip.cdr_queue(created_at) W
 -- CDR (Call Detail Records)
 -- =============================================================================
 
-CREATE TABLE voip.cdr (
+CREATE TABLE IF NOT EXISTS voip.cdr (
     id BIGSERIAL PRIMARY KEY,
     call_uuid UUID NOT NULL,
     bleg_uuid UUID,
@@ -234,11 +259,31 @@ CREATE TABLE voip.cdr (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_cdr_call_uuid ON voip.cdr(call_uuid);
-CREATE INDEX idx_cdr_domain ON voip.cdr(domain_id);
-CREATE INDEX idx_cdr_start_time ON voip.cdr(start_time);
-CREATE INDEX idx_cdr_queue ON voip.cdr(queue_id);
-CREATE INDEX idx_cdr_agent ON voip.cdr(agent_user_id);
+-- Ensure critical columns exist (for idempotent scripts)
+DO $$
+BEGIN
+    -- Ensure call_uuid column exists
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'voip' AND table_name = 'cdr' AND column_name = 'call_uuid'
+    ) THEN
+        ALTER TABLE voip.cdr ADD COLUMN call_uuid UUID NOT NULL;
+    END IF;
+
+    -- Ensure created_at column exists
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'voip' AND table_name = 'cdr' AND column_name = 'created_at'
+    ) THEN
+        ALTER TABLE voip.cdr ADD COLUMN created_at TIMESTAMP DEFAULT NOW();
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_cdr_call_uuid ON voip.cdr(call_uuid);
+CREATE INDEX IF NOT EXISTS idx_cdr_domain ON voip.cdr(domain_id);
+CREATE INDEX IF NOT EXISTS idx_cdr_start_time ON voip.cdr(start_time);
+CREATE INDEX IF NOT EXISTS idx_cdr_queue ON voip.cdr(queue_id);
+CREATE INDEX IF NOT EXISTS idx_cdr_agent ON voip.cdr(agent_user_id);
 
 -- =============================================================================
 -- RECORDINGS

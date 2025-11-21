@@ -14,15 +14,16 @@ FreeSWITCH xử lý media và call control:
 - Nhận SIP calls từ Kamailio (port 5080)
 - Xử lý dialplan, IVR, voicemail
 - Quản lý call queues
-- Gửi CDR đến VoIP Admin API
-- ODBC connection đến PostgreSQL cho directory/dialplan
+- Query directory/dialplan từ VoIP Admin API (mod_xml_curl)
+- Gửi CDR đến VoIP Admin API (mod_xml_cdr)
 
 ### Chiến Lược Kết Nối
 
-- FreeSWITCH trên Node 1 → PostgreSQL **172.16.91.101** (LOCAL via ODBC)
-- FreeSWITCH trên Node 2 → PostgreSQL **172.16.91.102** (LOCAL via ODBC)
+- FreeSWITCH trên Node 1 → VoIP Admin API **localhost:8080**
+- FreeSWITCH trên Node 2 → VoIP Admin API **localhost:8080**
+- VoIP Admin kết nối đến PostgreSQL LOCAL (đã setup trong guide 04)
 - CDR posting → VoIP Admin API qua HTTP (localhost:8080)
-- KHÔNG kết nối qua VIP
+- KHÔNG kết nối trực tiếp đến database (dùng API layer)
 
 ---
 
@@ -179,16 +180,19 @@ tail -100 /var/log/freeswitch/freeswitch.log
 freeswitch -nc -nonat
 ```
 
-### ODBC connection errors
+### XML_CURL không query được directory
 ```bash
-# Test ODBC connection
-echo "SELECT 1;" | isql -v voipdb-odbc
+# Check voip-admin API
+curl http://localhost:8080/health
 
-# Check odbc.ini
-cat /etc/odbc.ini
+# Check xml_curl config
+cat /etc/freeswitch/autoload_configs/xml_curl.conf.xml
 
-# Verify FreeSWITCH ODBC DSN
-fs_cli -x "odbc query voipdb-odbc SELECT 1"
+# Test API endpoint
+curl "http://localhost:8080/api/v1/freeswitch/directory?domain=default.local&user=1000"
+
+# Check FreeSWITCH logs
+tail -f /var/log/freeswitch/freeswitch.log | grep xml_curl
 ```
 
 ### CDR không được gửi
@@ -209,14 +213,19 @@ curl -X POST http://localhost:8080/api/v1/cdr \
 
 ## Verification Checklist
 
-- [ ] FreeSWITCH 1.10.x installed
-- [ ] ODBC configured and tested (`isql -v voipdb-odbc`)
-- [ ] FreeSWITCH ODBC connection working (`odbc query`)
+- [ ] FreeSWITCH 1.10.x installed (`freeswitch -version`)
+- [ ] All required modules installed
+- [ ] Config files deployed from repo
+- [ ] Passwords replaced in xml_curl.conf.xml và xml_cdr.conf.xml
+- [ ] IP addresses adjusted per node (Node 1: .101, Node 2: .102)
+- [ ] Recordings directory created (/recordings/freeswitch)
 - [ ] Listening on port 5080 for SIP from Kamailio
-- [ ] XML dialplan loaded
-- [ ] mod_xml_cdr configured to post to VoIP Admin
+- [ ] Sofia profile UP (`sofia status` in fs_cli)
+- [ ] mod_xml_curl loaded (`module_exists mod_xml_curl`)
+- [ ] mod_xml_cdr loaded (`module_exists mod_xml_cdr`)
+- [ ] VoIP Admin API accessible (curl localhost:8080/health)
 - [ ] Service enabled (`systemctl is-enabled freeswitch`)
-- [ ] Can make test calls between extensions
+- [ ] Can register extensions and make test calls
 
 ---
 
