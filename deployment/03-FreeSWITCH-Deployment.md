@@ -19,10 +19,18 @@ FreeSWITCH xử lý media và call control:
 
 ### Chiến Lược Kết Nối
 
-- FreeSWITCH trên Node 1 → VoIP Admin API **localhost:8080**
-- FreeSWITCH trên Node 2 → VoIP Admin API **localhost:8080**
-- VoIP Admin kết nối đến PostgreSQL LOCAL (đã setup trong guide 04)
-- CDR posting → VoIP Admin API qua HTTP (localhost:8080)
+⚠️ **QUAN TRỌNG**: FreeSWITCH connect qua **VIP** (172.16.91.100:8080), KHÔNG phải localhost!
+
+- FreeSWITCH (cả 2 nodes) → VoIP Admin API **VIP:8080** (172.16.91.100:8080)
+- Dùng VIP vì:
+  - FreeSWITCH query directory/dialplan **real-time cho MỖI CALL** (không chỉ CDR)
+  - Nếu dùng localhost → khi failover, node đã down không query được
+  - VIP đảm bảo luôn query active voip-admin (VIP follows master)
+- VoIP Admin kết nối đến PostgreSQL LOCAL của chính nó
+- 3 loại XML_CURL queries:
+  1. **Directory**: Authentication, user settings (mod_xml_curl)
+  2. **Dialplan**: Call routing logic (mod_xml_curl)
+  3. **CDR**: Post call records (mod_xml_cdr)
 - KHÔNG kết nối trực tiếp đến database (dùng API layer)
 
 ---
@@ -113,6 +121,25 @@ sudo sed -i "s/CHANGE_THIS_PASSWORD/$FREESWITCH_PASS/g" \
     /etc/freeswitch/autoload_configs/xml_cdr.conf.xml
 ```
 
+**QUAN TRỌNG - Verify VIP addresses:**
+```bash
+# xml_curl.conf.xml should use VIP (172.16.91.100), NOT localhost or node IPs
+grep "gateway-url" /etc/freeswitch/autoload_configs/xml_curl.conf.xml
+# Should show: http://172.16.91.100:8080/freeswitch/directory
+#              http://172.16.91.100:8080/freeswitch/dialplan
+#              http://172.16.91.100:8080/freeswitch/configuration
+
+# xml_cdr.conf.xml should also use VIP
+grep "url" /etc/freeswitch/autoload_configs/xml_cdr.conf.xml
+# Should show: http://172.16.91.100:8080/api/v1/cdr
+```
+
+**Lý do dùng VIP thay vì localhost:**
+- FreeSWITCH query directory/dialplan cho MỖI CALL (authentication, routing)
+- VIP đảm bảo FreeSWITCH luôn connect đến active voip-admin
+- Khi failover, VIP moves sang node mới → FreeSWITCH tự động query node mới
+- Localhost chỉ work khi cả voip-admin và FreeSWITCH cùng node active
+
 ### 9.4 Adjust FreeSWITCH for Node-Specific IP
 
 **Trên Node 1:**
@@ -182,14 +209,20 @@ freeswitch -nc -nonat
 
 ### XML_CURL không query được directory
 ```bash
-# Check voip-admin API
+# Check voip-admin API health (trên node đang có VIP)
+curl http://172.16.91.100:8080/health
+
+# Hoặc check local voip-admin
 curl http://localhost:8080/health
 
-# Check xml_curl config
-cat /etc/freeswitch/autoload_configs/xml_curl.conf.xml
+# Verify VIP address trong config
+grep "gateway-url" /etc/freeswitch/autoload_configs/xml_curl.conf.xml
+# PHẢI là VIP (172.16.91.100), KHÔNG phải localhost hoặc .101/.102
 
-# Test API endpoint
-curl "http://localhost:8080/api/v1/freeswitch/directory?domain=default.local&user=1000"
+# Test directory API endpoint
+curl -X POST "http://172.16.91.100:8080/freeswitch/directory" \
+  -u "freeswitch:YOUR_PASSWORD" \
+  -d "section=directory&tag_name=domain&key_name=name&key_value=default.local&user=1000&domain=default.local"
 
 # Check FreeSWITCH logs
 tail -f /var/log/freeswitch/freeswitch.log | grep xml_curl
@@ -197,16 +230,20 @@ tail -f /var/log/freeswitch/freeswitch.log | grep xml_curl
 
 ### CDR không được gửi
 ```bash
-# Check voip-admin health
-curl http://localhost:8080/health
+# Check voip-admin health (dùng VIP)
+curl http://172.16.91.100:8080/health
+
+# Check xml_cdr config
+grep "url" /etc/freeswitch/autoload_configs/xml_cdr.conf.xml
+# PHẢI là VIP: http://172.16.91.100:8080/api/v1/cdr
 
 # Check FreeSWITCH XML CDR logs
 tail -f /var/log/freeswitch/freeswitch.log | grep xml_cdr
 
 # Test CDR endpoint manually
-curl -X POST http://localhost:8080/api/v1/cdr \
-  -H "Content-Type: application/json" \
-  -d '{"test": "data"}'
+curl -X POST http://172.16.91.100:8080/api/v1/cdr \
+  -H "Content-Type: application/xml" \
+  -d '<?xml version="1.0"?><cdr><variables><uuid>test-123</uuid></variables></cdr>'
 ```
 
 ---

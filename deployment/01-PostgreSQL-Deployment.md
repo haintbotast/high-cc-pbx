@@ -315,7 +315,28 @@ cd /tmp
 git clone https://github.com/haintbotast/high-cc-pbx.git
 cd high-cc-pbx
 
-# Apply database schemas theo thứ tự
+# STEP 1: Initialize database, schemas, và users (RUN FIRST!)
+sudo -u postgres psql -d voipdb -f database/schemas/00-init-database.sql
+
+# Replace default passwords in 00-init-database.sql với actual passwords:
+# (Script sẽ tạo users với default passwords, cần change sau)
+
+# Change passwords cho database users
+KAMAILIO_PASS=$(grep kamailio_db_password /root/.voip_credentials | cut -d'=' -f2)
+KAMAILIORO_PASS=$(grep kamailioro_db_password /root/.voip_credentials | cut -d'=' -f2)
+VOIPADMIN_PASS=$(grep voipadmin_db_password /root/.voip_credentials | cut -d'=' -f2)
+FREESWITCH_PASS=$(grep freeswitch_db_password /root/.voip_credentials | cut -d'=' -f2)
+REPLICATOR_PASS=$(grep replicator_db_password /root/.voip_credentials | cut -d'=' -f2)
+
+sudo -u postgres psql -d voipdb <<EOF
+ALTER USER kamailio WITH PASSWORD '$KAMAILIO_PASS';
+ALTER USER kamailioro WITH PASSWORD '$KAMAILIORO_PASS';
+ALTER USER voipadmin WITH PASSWORD '$VOIPADMIN_PASS';
+ALTER USER freeswitch WITH PASSWORD '$FREESWITCH_PASS';
+ALTER USER replicator WITH PASSWORD '$REPLICATOR_PASS';
+EOF
+
+# STEP 2: Load application schemas theo thứ tự
 sudo -u postgres psql -d voipdb -f database/schemas/01-voip-schema.sql
 sudo -u postgres psql -d voipdb -f database/schemas/02-kamailio-schema.sql
 sudo -u postgres psql -d voipdb -f database/schemas/03-auth-integration.sql
@@ -329,14 +350,19 @@ sudo -u postgres psql -d voipdb -c "\dn"
 sudo -u postgres psql -d voipdb -c "\dt voip.*"
 sudo -u postgres psql -d voipdb -c "\dt kamailio.*"
 
-# Grant permissions
-sudo -u postgres psql -d voipdb <<EOF
--- Kamailio read-write permissions
-GRANT USAGE ON SCHEMA kamailio TO kamailio;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA kamailio TO kamailio;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA kamailio TO kamailio;
+# Verify users
+sudo -u postgres psql -d voipdb -c "\du" | grep -E "kamailio|voipadmin|freeswitch|replicator"
 
--- Kamailio read-only permissions (for kamctl)
+# Test user connections
+psql -h 127.0.0.1 -U kamailio -d voipdb -c "SELECT current_user, current_database();"
+psql -h 127.0.0.1 -U voipadmin -d voipdb -c "SELECT current_user, current_database();"
+```
+
+**Lưu ý quan trọng**:
+- File `00-init-database.sql` tạo database users, schemas, và permissions
+- Files `01-04` tạo application tables và functions
+- Permissions đã được setup trong `00-init-database.sql`, KHÔNG cần grant thủ công
+- Nếu cần grant permissions
 GRANT USAGE ON SCHEMA kamailio TO kamailioro;
 GRANT SELECT ON ALL TABLES IN SCHEMA kamailio TO kamailioro;
 GRANT SELECT ON ALL SEQUENCES IN SCHEMA kamailio TO kamailioro;
